@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+odoo-attendance-db
+odoo-attendance-web

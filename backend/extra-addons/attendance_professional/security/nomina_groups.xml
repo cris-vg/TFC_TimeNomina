@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Grupo Empleado TimeNomina -->
+    <record id="group_nomina_empleado" model="res.groups">
+        <field name="name">Empleado TimeNomina</field>
+    </record>
+
+</odoo>

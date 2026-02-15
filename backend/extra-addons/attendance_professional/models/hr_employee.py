@@ -1,0 +1,68 @@
+# -*- coding: utf-8 -*-
+from odoo import models, fields, api
+from odoo.exceptions import UserError
+from datetime import datetime
+
+
+class HrEmployee(models.Model):
+    
+    _inherit = 'hr.employee'
+
+    def fichar_desde_app(self, latitude=None, longitude=None):
+
+        self.ensure_one()
+
+        # 🔐 Verificar que el usuario logueado tenga empleado vinculado
+        if not self.env.user.employee_id:
+            return {
+                "success": False,
+                "error_code": "NO_EMPLOYEE_LINKED",
+                "message": "Usuario no vinculado a ningún empleado"
+            }
+
+        # 🔐 Verificar que el empleado es el suyo
+        if self.env.user.employee_id.id != self.id:
+            return {
+                "success": False,
+                "error_code": "FORBIDDEN",
+                "message": "No puedes fichar por otro empleado"
+            }
+
+        Attendance = self.env['hr.attendance'].sudo()
+
+        ultimo_fichaje = Attendance.search([
+            ('employee_id', '=', self.id),
+            ('check_out', '=', False)
+        ], limit=1)
+
+        ahora = fields.Datetime.now()
+
+        if not ultimo_fichaje:
+            Attendance.create({
+                'employee_id': self.id,
+                'check_in': ahora,
+                'in_latitude': latitude,
+                'in_longitude': longitude,
+            })
+
+            return {
+                "success": True,
+                "estado": "entrada",
+                "timestamp": ahora,
+                "latitud": latitude,
+                "longitud": longitude
+            }
+        else:
+            ultimo_fichaje.write({
+                'check_out': ahora,
+                'out_latitude': latitude,
+                'out_longitude': longitude,
+            })
+
+            return {
+                "success": True,
+                "estado": "salida",
+                "timestamp": ahora,
+                "latitud": latitude,
+                "longitud": longitude
+            }

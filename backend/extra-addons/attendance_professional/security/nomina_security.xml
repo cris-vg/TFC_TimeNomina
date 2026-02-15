@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+
+    <!-- ============================= -->
+    <!-- REGLA: EMPLEADO SOLO VE SUS NÓMINAS -->
+    <!-- ============================= -->
+    <record id="rule_nomina_empleado_propias" model="ir.rule">
+        <field name="name">Empleado solo ve sus nóminas</field>
+        <field name="model_id" ref="model_nomina_nomina" />
+        <field name="groups" eval="[(4, ref('attendance_professional.group_nomina_empleado'))]" />
+        <field name="domain_force">
+            [('empleado_id.user_id', '=', user.id)]
+        </field>
+        <field name="perm_read" eval="True" />
+        <field name="perm_write" eval="False" />
+        <field name="perm_create" eval="False" />
+        <field name="perm_unlink" eval="False" />
+    </record>
+
+</odoo>
