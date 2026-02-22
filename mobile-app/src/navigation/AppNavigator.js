@@ -5,6 +5,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import LoginScreen from '../screens/LoginScreen';
 import HomeScreen from '../screens/HomeScreen';
 import FichajeScreen from '../screens/FichajeScreen';
+import MapaScreen from '../screens/MapaScreen';
+import HistorialScreen from '../screens/HistorialScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -26,6 +28,16 @@ export default function AppNavigator() {
                     name="Fichaje"
                     component={FichajeScreen}
                     options={{ title: "Fichar" }}
+                />
+                <Stack.Screen
+                    name="Mapa"
+                    component={MapaScreen}
+                    options={{ title: "Ubicación de fichaje" }}
+                />
+                <Stack.Screen
+                    name="Historial"
+                    component={HistorialScreen}
+                    options={{ title: "Historial de fichajes" }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

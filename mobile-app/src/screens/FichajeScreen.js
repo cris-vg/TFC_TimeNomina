@@ -7,16 +7,18 @@ import * as Location from 'expo-location';
 import { AuthContext } from '../context/AuthContext';
 import { ficharDesdeApp } from '../services/odooService';
 
-export default function FichajeScreen() {
+export default function FichajeScreen({ navigation }) {
 
     const { uid, password, empleadoId, nombreEmpleado } = useContext(AuthContext);
     const [cargando, setCargando] = useState(false);
 
     const baseDatos = "attendance_app";
 
+    /**
+     * 📍 Obtener ubicación GPS real
+     */
     const obtenerUbicacion = async () => {
 
-        // 1️⃣ Pedir permisos
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (status !== 'granted') {
@@ -24,7 +26,6 @@ export default function FichajeScreen() {
             return null;
         }
 
-        // 2️⃣ Obtener posición actual
         const ubicacion = await Location.getCurrentPositionAsync({
             accuracy: Location.Accuracy.High
         });
@@ -35,6 +36,39 @@ export default function FichajeScreen() {
         };
     };
 
+    /**
+     * 🏠 Convertir coordenadas en dirección real
+     */
+    const obtenerDireccion = async (latitud, longitud) => {
+
+        try {
+            const resultado = await Location.reverseGeocodeAsync({
+                latitude: latitud,
+                longitude: longitud,
+            });
+
+            if (resultado.length > 0) {
+
+                const direccion = resultado[0];
+
+                return `
+${direccion.street || ""} ${direccion.name || ""}
+${direccion.city || ""}
+${direccion.region || ""}
+${direccion.country || ""}
+                `;
+            }
+
+            return "Dirección no encontrada";
+
+        } catch (error) {
+            return "Error obteniendo dirección";
+        }
+    };
+
+    /**
+     * 🕒 Ejecutar fichaje
+     */
     const manejarFichaje = async () => {
 
         if (!empleadoId) {
@@ -44,7 +78,6 @@ export default function FichajeScreen() {
 
         setCargando(true);
 
-        // 🔎 Obtener GPS real
         const coordenadas = await obtenerUbicacion();
 
         if (!coordenadas) {
@@ -61,24 +94,42 @@ export default function FichajeScreen() {
             coordenadas.longitud
         );
 
-        setCargando(false);
-
         if (resultado.exito) {
+
+            const direccion = await obtenerDireccion(
+                coordenadas.latitud,
+                coordenadas.longitud
+            );
+
+            setCargando(false);
+
             Alert.alert(
                 "Fichaje correcto",
                 "Empleado: " + nombreEmpleado +
                 "\nEstado: " + resultado.datos.estado +
-                "\nLat: " + coordenadas.latitud.toFixed(5) +
-                "\nLng: " + coordenadas.longitud.toFixed(5)
+                "\n\nDirección:\n" + direccion,
+                [
+                    {
+                        text: "Ver ubicación",
+                        onPress: () => navigation.navigate("Mapa", {
+                            latitud: coordenadas.latitud,
+                            longitud: coordenadas.longitud
+                        })
+                    }
+                ]
             );
+
         } else {
+            setCargando(false);
             Alert.alert("Error", resultado.mensaje);
         }
     };
 
     return (
         <View style={styles.contenedor}>
-            <Text style={styles.titulo}>Empleado: {nombreEmpleado}</Text>
+            <Text style={styles.titulo}>
+                Empleado: {nombreEmpleado}
+            </Text>
 
             <Button
                 title={cargando ? "Fichando..." : "Fichar con GPS"}
@@ -98,5 +149,6 @@ const styles = StyleSheet.create({
     titulo: {
         fontSize: 22,
         marginBottom: 20,
+        textAlign: "center"
     },
 });

@@ -162,3 +162,62 @@ export async function ficharDesdeApp(
         return { exito: false, mensaje: "Error de conexión con el servidor" };
     }
 }
+
+/**
+ * 📋 Obtener historial de fichajes del empleado
+ */
+export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
+
+    try {
+        const respuesta = await fetch(URL_ODOO, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    service: "object",
+                    method: "execute_kw",
+                    args: [
+                        baseDatos,
+                        uid,
+                        password,
+                        "hr.attendance",
+                        "search_read",
+                        [
+                            [["employee_id", "=", empleadoId]]
+                        ],
+                        {
+                            fields: [
+                                "check_in",
+                                "check_out",
+                                "worked_hours",
+                                "in_latitude",
+                                "in_longitude"
+                            ],
+                            order: "check_in desc",
+                            limit: 20
+                        }
+                    ],
+                },
+                id: 5,
+            }),
+        });
+
+        const datos = await respuesta.json();
+
+        console.log("Historial recibido:", datos);
+
+        if (datos.result) {
+            return { exito: true, registros: datos.result };
+        }
+
+        return { exito: false, mensaje: "No se pudo obtener historial" };
+
+    } catch (error) {
+        console.log("Error historial:", error);
+        return { exito: false, mensaje: "Error de conexión con el servidor" };
+    }
+}

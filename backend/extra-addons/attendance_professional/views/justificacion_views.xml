@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <!-- Vista árbol -->
+    <record id="view_justification_tree" model="ir.ui.view">
+        <field name="name">attendance.justification.tree</field>
+        <field name="model">attendance.justification</field>
+        <field name="arch" type="xml">
+            <list>
+                <field name="employee_id" />
+                <field name="fecha" />
+                <field name="tipo" />
+                <field name="estado" />
+            </list>
+        </field>
+    </record>
+
+    <!-- Vista formulario -->
+    <record id="view_justification_form" model="ir.ui.view">
+        <field name="name">attendance.justification.form</field>
+        <field name="model">attendance.justification</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <field name="employee_id" />
+                        <field name="fecha" />
+                        <field name="tipo" />
+                        <field name="estado" />
+                    </group>
+
+                    <group>
+                        <field name="descripcion" />
+                        <field name="documento" filename="nombre_documento" />
+                        <field name="comentario_rrhh" />
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Acción -->
+    <record id="action_justifications" model="ir.actions.act_window">
+        <field name="name">Justificaciones</field>
+        <field name="res_model">attendance.justification</field>
+        <field name="view_mode">list,form</field>
+    </record>
+
+    <!-- Submenú Justificaciones dentro de TimeNomina -->
+    <menuitem
+        id="menu_justifications"
+        name="Justificaciones"
+        parent="menu_time_nomina_root"
+        action="action_justifications"
+        sequence="20"
+    />
+
+</odoo>

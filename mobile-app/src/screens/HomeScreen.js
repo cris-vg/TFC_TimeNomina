@@ -16,6 +16,10 @@ export default function HomeScreen({ navigation }) {
                 title="Ir a fichaje"
                 onPress={() => navigation.navigate("Fichaje")}
             />
+            <Button
+                title="Ver Historial"
+                onPress={() => navigation.navigate("Historial")}
+            />
         </View>
     );
 }

@@ -9,6 +9,7 @@
         "security/ir.model.access.csv",
         "security/nomina_security.xml",
         "views/nomina_views.xml",
+        "views/justificacion_views.xml",
     ],
     "installable": True,
     "application": False,

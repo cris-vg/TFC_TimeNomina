@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 access_nomina_admin,access.nomina.admin,model_nomina_nomina,base.group_system,1,1,1,1
 access_nomina_usuario,access.nomina.usuario,model_nomina_nomina,base.group_user,1,0,0,0
+access_justification_admin,access.justification.admin,model_attendance_justification,base.group_system,1,1,1,1
+access_justification_user,access.justification.user,model_attendance_justification,base.group_user,1,1,1,0
