@@ -34,6 +34,7 @@ export default function FichajeScreen({ navigation }) {
             latitud: ubicacion.coords.latitude,
             longitud: ubicacion.coords.longitude
         };
+
     };
 
     /**
@@ -134,6 +135,14 @@ ${direccion.country || ""}
             <Button
                 title={cargando ? "Fichando..." : "Fichar con GPS"}
                 onPress={manejarFichaje}
+            />
+            {/* Espacio visual */}
+            <View style={{ height: 20 }} />
+
+            {/* Botón nueva justificación */}
+            <Button
+                title="Nueva Justificación"
+                onPress={() => navigation.navigate("Justificacion")}
             />
         </View>
     );

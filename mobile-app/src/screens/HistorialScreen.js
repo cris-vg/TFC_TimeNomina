@@ -36,7 +36,7 @@ export default function HistorialScreen({ navigation }) {
         );
 
         if (resultado.exito) {
-            setRegistros(resultado.registros);
+            setRegistros(resultado.datos);
         }
 
         setCargando(false);

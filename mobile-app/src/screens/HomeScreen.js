@@ -20,6 +20,11 @@ export default function HomeScreen({ navigation }) {
                 title="Ver Historial"
                 onPress={() => navigation.navigate("Historial")}
             />
+            <Button
+                title="Mis justificaciones"
+                onPress={() => navigation.navigate("MisJustificaciones")}
+            />
+
         </View>
     );
 }

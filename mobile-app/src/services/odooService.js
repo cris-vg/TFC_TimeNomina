@@ -1,19 +1,19 @@
 // src/services/odooService.js
 
-// 🔹 URL del servidor Odoo
-// ⚠️ Asegúrate de que esta IP es la de tu ordenador en la misma red que el móvil
-const URL_ODOO = "http://192.168.1.16:8070/jsonrpc";
+const URL_ODOO = "https://nonconceptually-phyllodial-magan.ngrok-free.dev/jsonrpc";
+
 
 /**
- * 🔐 Función para hacer login en Odoo
+ * 🔐 LOGIN
  */
 export async function loginOdoo(baseDatos, usuario, password) {
-
     try {
-        const respuesta = await fetch(URL_ODOO, {
+        console.log("Enviando login a: ", URL_ODOO);
+        const response = await fetch(URL_ODOO, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
+                "ngrok-skip-browser-warning": "true" //para evitar la advertencia de ngrok
             },
             body: JSON.stringify({
                 jsonrpc: "2.0",
@@ -27,37 +27,33 @@ export async function loginOdoo(baseDatos, usuario, password) {
             }),
         });
 
-        const datos = await respuesta.json();
+        console.log("Status: ", response.status);
 
-        console.log("Respuesta login:", datos);
+        const text = await response.text();
+        console.log("Response text: ", text);
 
-        if (datos.result && datos.result > 0) {
-            return { exito: true, uid: datos.result };
+        const data = JSON.parse(text);
+
+        if (data.result) {
+            return { exito: true, uid: data.result };
         }
 
-        if (datos.result === false) {
-            return { exito: false, mensaje: "Usuario o contraseña incorrectos" };
-        }
-
-        return { exito: false, mensaje: "Error inesperado en login" };
+        return { exito: false, mensaje: "Credenciales incorrectas" };
 
     } catch (error) {
-        console.log("Error login:", error);
-        return { exito: false, mensaje: "No hay conexión con el servidor" };
+        return { exito: false, mensaje: "Error de conexión con el servidor" };
     }
 }
 
-/**
- * 👤 Obtiene el empleado vinculado al usuario logueado
- */
-export async function obtenerEmpleadoPorUsuario(baseDatos, uid, password) {
 
+/**
+ * 👤 OBTENER EMPLEADO VINCULADO
+ */
+export async function obtenerEmpleado(baseDatos, uid, password) {
     try {
-        const respuesta = await fetch(URL_ODOO, {
+        const response = await fetch(URL_ODOO, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 jsonrpc: "2.0",
                 method: "call",
@@ -73,37 +69,29 @@ export async function obtenerEmpleadoPorUsuario(baseDatos, uid, password) {
                         [
                             [["user_id", "=", uid]]
                         ],
-                        {
-                            fields: ["id", "name"]
-                        }
-                    ],
+                        { fields: ["id", "name"] }
+                    ]
                 },
                 id: 2,
             }),
         });
 
-        const datos = await respuesta.json();
+        const data = await response.json();
 
-        console.log("Empleado encontrado:", datos);
-
-        if (datos.result && datos.result.length > 0) {
-            return {
-                exito: true,
-                empleadoId: datos.result[0].id,
-                nombre: datos.result[0].name
-            };
+        if (data.result && data.result.length > 0) {
+            return { exito: true, empleado: data.result[0] };
         }
 
-        return { exito: false, mensaje: "No hay empleado vinculado al usuario" };
+        return { exito: false, mensaje: "Empleado no encontrado" };
 
     } catch (error) {
-        console.log("Error empleado:", error);
         return { exito: false, mensaje: "Error obteniendo empleado" };
     }
 }
 
+
 /**
- * 🕒 Función para fichar entrada o salida
+ * 🕒 FICHAR DESDE APP
  */
 export async function ficharDesdeApp(
     baseDatos,
@@ -113,13 +101,10 @@ export async function ficharDesdeApp(
     latitud,
     longitud
 ) {
-
     try {
-        const respuesta = await fetch(URL_ODOO, {
+        const response = await fetch(URL_ODOO, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 jsonrpc: "2.0",
                 method: "call",
@@ -137,43 +122,34 @@ export async function ficharDesdeApp(
                             latitude: latitud,
                             longitude: longitud
                         }
-                    ],
+                    ]
                 },
                 id: 3,
             }),
         });
 
-        const datos = await respuesta.json();
+        const data = await response.json();
 
-        console.log("Respuesta fichaje:", datos);
-
-        if (datos.result && datos.result.success) {
-            return { exito: true, datos: datos.result };
+        if (data.result && data.result.success) {
+            return { exito: true, datos: data.result };
         }
 
-        if (datos.error) {
-            return { exito: false, mensaje: datos.error.data.message };
-        }
-
-        return { exito: false, mensaje: "Error al fichar" };
+        return { exito: false, mensaje: data.result?.message || "Error fichando" };
 
     } catch (error) {
-        console.log("Error fichaje:", error);
-        return { exito: false, mensaje: "Error de conexión con el servidor" };
+        return { exito: false, mensaje: "Error de conexión" };
     }
 }
 
+
 /**
- * 📋 Obtener historial de fichajes del empleado
+ * 📜 OBTENER HISTORIAL DE FICHAJES
  */
 export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
-
     try {
-        const respuesta = await fetch(URL_ODOO, {
+        const response = await fetch(URL_ODOO, {
             method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
                 jsonrpc: "2.0",
                 method: "call",
@@ -197,27 +173,135 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
                                 "in_latitude",
                                 "in_longitude"
                             ],
-                            order: "check_in desc",
-                            limit: 20
+                            order: "check_in desc"
                         }
-                    ],
+                    ]
+                },
+                id: 4,
+            }),
+        });
+
+        const data = await response.json();
+        console.log("Historial response: ", data);
+        console.log("Resultado:", data.result);
+
+        if (data.result) {
+            return { exito: true, datos: data.result };
+        }
+
+        return { exito: false, mensaje: "Error obteniendo historial" };
+
+    } catch (error) {
+        return { exito: false, mensaje: "Error de conexión" };
+    }
+}
+
+
+/**
+ * 📝 CREAR JUSTIFICACIÓN (con documento)
+ */
+export async function crearJustificacion(
+    baseDatos,
+    uid,
+    password,
+    empleadoId,
+    tipo,
+    descripcion,
+    archivoBase64 = null,
+    nombreArchivo = null
+) {
+    try {
+        const response = await fetch(URL_ODOO, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    service: "object",
+                    method: "execute_kw",
+                    args: [
+                        baseDatos,
+                        uid,
+                        password,
+                        "attendance.justification",
+                        "create",
+                        [{
+                            employee_id: empleadoId,
+                            tipo: tipo,
+                            descripcion: descripcion,
+                            documento: archivoBase64,
+                            nombre_documento: nombreArchivo
+                        }]
+                    ]
                 },
                 id: 5,
             }),
         });
 
-        const datos = await respuesta.json();
+        const data = await response.json();
 
-        console.log("Historial recibido:", datos);
-
-        if (datos.result) {
-            return { exito: true, registros: datos.result };
+        if (data.result) {
+            return { exito: true };
         }
 
-        return { exito: false, mensaje: "No se pudo obtener historial" };
+        return { exito: false, mensaje: "Error al crear justificación" };
 
     } catch (error) {
-        console.log("Error historial:", error);
-        return { exito: false, mensaje: "Error de conexión con el servidor" };
+        return { exito: false, mensaje: "Error de conexión" };
+    }
+}
+
+
+/**
+ * 📂 OBTENER MIS JUSTIFICACIONES
+ */
+export async function obtenerJustificaciones(baseDatos, uid, password, empleadoId) {
+    try {
+        const response = await fetch(URL_ODOO, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    service: "object",
+                    method: "execute_kw",
+                    args: [
+                        baseDatos,
+                        uid,
+                        password,
+                        "attendance.justification",
+                        "search_read",
+                        [
+                            [["employee_id", "=", empleadoId]]
+                        ],
+                        {
+                            fields: [
+                                "fecha",
+                                "tipo",
+                                "descripcion",
+                                "estado",
+                                "comentario_rrhh",
+                                "nombre_documento"
+                            ],
+                            order: "fecha desc"
+                        }
+                    ]
+                },
+                id: 6,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.result) {
+            return { exito: true, datos: data.result };
+        }
+
+        return { exito: false, mensaje: "Error obteniendo justificaciones" };
+
+    } catch (error) {
+        return { exito: false, mensaje: "Error de conexión" };
     }
 }

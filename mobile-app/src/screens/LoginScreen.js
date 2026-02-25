@@ -12,7 +12,7 @@ import {
     Platform
 } from 'react-native';
 
-import { loginOdoo, obtenerEmpleadoPorUsuario } from '../services/odooService';
+import { loginOdoo, obtenerEmpleado } from '../services/odooService';
 import { AuthContext } from '../context/AuthContext';
 
 export default function LoginScreen({ navigation }) {
@@ -24,6 +24,7 @@ export default function LoginScreen({ navigation }) {
     const { login } = useContext(AuthContext);
 
     const manejarLogin = async () => {
+        console.log("BOTON LOGIN PULSADO");
 
         if (!usuario || !password) {
             Alert.alert("Error", "Debes introducir usuario y contraseña");
@@ -33,9 +34,11 @@ export default function LoginScreen({ navigation }) {
         setCargando(true);
 
         const baseDatos = "attendance_app";
+        console.log("Voy a llamar a loginOdoo")
 
         // 🔐 1️⃣ Login
         const resultadoLogin = await loginOdoo(baseDatos, usuario, password);
+        console.log("Login OK, voy a obtener empleado vinculado")
 
         if (!resultadoLogin.exito) {
             setCargando(false);
@@ -44,9 +47,11 @@ export default function LoginScreen({ navigation }) {
         }
 
         const uid = resultadoLogin.uid;
+        console.log("Llamando a obtenerEmpleado");
 
         // 👤 2️⃣ Obtener empleado vinculado
-        const resultadoEmpleado = await obtenerEmpleadoPorUsuario(baseDatos, uid, password);
+        const resultadoEmpleado = await obtenerEmpleado(baseDatos, uid, password);
+        console.log("Empleado obtenido: ", resultadoEmpleado);
 
         setCargando(false);
 
@@ -60,8 +65,8 @@ export default function LoginScreen({ navigation }) {
             usuario,
             uid,
             password,
-            resultadoEmpleado.empleadoId,
-            resultadoEmpleado.nombre
+            resultadoEmpleado.empleado.id,
+            resultadoEmpleado.empleado.name
         );
 
         navigation.replace("Home");
