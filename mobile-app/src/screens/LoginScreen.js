@@ -1,17 +1,20 @@
 // src/screens/LoginScreen.js
 
 import React, { useState, useContext } from 'react';
+import { StatusBar } from 'expo-status-bar';
 import {
     View,
     Text,
     TextInput,
-    Button,
     StyleSheet,
     Alert,
     KeyboardAvoidingView,
-    Platform
+    Platform,
+    TouchableOpacity,
+    ActivityIndicator,
+    Image
 } from 'react-native';
-
+import { LinearGradient } from 'expo-linear-gradient';
 import { loginOdoo, obtenerEmpleado } from '../services/odooService';
 import { AuthContext } from '../context/AuthContext';
 
@@ -24,7 +27,6 @@ export default function LoginScreen({ navigation }) {
     const { login } = useContext(AuthContext);
 
     const manejarLogin = async () => {
-        console.log("BOTON LOGIN PULSADO");
 
         if (!usuario || !password) {
             Alert.alert("Error", "Debes introducir usuario y contraseña");
@@ -34,25 +36,18 @@ export default function LoginScreen({ navigation }) {
         setCargando(true);
 
         const baseDatos = "attendance_app";
-        console.log("Voy a llamar a loginOdoo")
 
-        // 🔐 1️⃣ Login
         const resultadoLogin = await loginOdoo(baseDatos, usuario, password);
-
 
         if (!resultadoLogin.exito) {
             setCargando(false);
             Alert.alert("Error", resultadoLogin.mensaje);
             return;
         }
-        console.log("Login OK, voy a obtener empleado vinculado")
 
         const uid = resultadoLogin.uid;
-        console.log("Llamando a obtenerEmpleado");
 
-        // 👤 2️⃣ Obtener empleado vinculado
         const resultadoEmpleado = await obtenerEmpleado(baseDatos, uid, password);
-        console.log("Empleado obtenido: ", resultadoEmpleado);
 
         setCargando(false);
 
@@ -61,7 +56,6 @@ export default function LoginScreen({ navigation }) {
             return;
         }
 
-        // ✅ 3️⃣ Guardar todo en contexto
         login(
             usuario,
             uid,
@@ -74,40 +68,66 @@ export default function LoginScreen({ navigation }) {
     };
 
     return (
-        <KeyboardAvoidingView
+        <LinearGradient
+            colors={["#3A4A6A", "#556A9E"]}
             style={{ flex: 1 }}
-            behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
-            <View style={styles.contenedor}>
+            <StatusBar style="light" />
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <View style={styles.contenedor}>
 
-                <Text style={styles.titulo}>TimeNomina</Text>
+                    <Image
+                        source={require('../../assets/Logo.png')}
+                        style={styles.logo}
+                    />
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Usuario"
-                    value={usuario}
-                    onChangeText={setUsuario}
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
+                    <View style={styles.card}>
 
-                <TextInput
-                    style={styles.input}
-                    placeholder="Contraseña"
-                    value={password}
-                    onChangeText={setPassword}
-                    secureTextEntry
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                />
+                        <Text style={styles.titulo}>Bienvenido</Text>
 
-                <Button
-                    title={cargando ? "Conectando..." : "Iniciar sesión"}
-                    onPress={manejarLogin}
-                />
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Usuario"
+                            placeholderTextColor="#6B7280"
+                            value={usuario}
+                            onChangeText={setUsuario}
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
 
-            </View>
-        </KeyboardAvoidingView>
+                        <TextInput
+                            style={styles.input}
+                            placeholder="Contraseña"
+                            placeholderTextColor="#6B7280"
+                            value={password}
+                            onChangeText={setPassword}
+                            secureTextEntry
+                            autoCapitalize="none"
+                            autoCorrect={false}
+                        />
+
+                        <TouchableOpacity
+                            style={styles.boton}
+                            onPress={manejarLogin}
+                            disabled={cargando}
+                        >
+                            {cargando ? (
+                                <ActivityIndicator color="#FFFFFF" />
+                            ) : (
+                                <Text style={styles.botonTexto}>
+                                    INICIAR SESIÓN
+                                </Text>
+                            )}
+                        </TouchableOpacity>
+
+                    </View>
+
+                </View>
+            </KeyboardAvoidingView>
+        </LinearGradient>
     );
 }
 
@@ -115,19 +135,45 @@ const styles = StyleSheet.create({
     contenedor: {
         flex: 1,
         justifyContent: 'center',
-        padding: 20,
+        paddingHorizontal: 30,
+    },
+    logo: {
+        width: 180,
+        height: 180,
+        alignSelf: 'center',
+        marginBottom: 30,
+        resizeMode: 'contain'
+    },
+    card: {
+        backgroundColor: '#FFFFFF',
+        borderRadius: 20,
+        padding: 25,
+        elevation: 8
     },
     titulo: {
-        fontSize: 26,
-        fontWeight: 'bold',
-        marginBottom: 30,
-        textAlign: 'center'
+        fontSize: 22,
+        fontWeight: '600',
+        marginBottom: 20,
+        textAlign: 'center',
+        color: '#1A1A1A'
     },
     input: {
-        borderWidth: 1,
-        borderColor: '#ccc',
-        padding: 10,
+        backgroundColor: '#F4F6FA',
+        borderRadius: 12,
+        padding: 15,
         marginBottom: 15,
-        borderRadius: 5
+        fontSize: 16
+    },
+    boton: {
+        backgroundColor: '#1F2A44',
+        padding: 16,
+        borderRadius: 12,
+        marginTop: 10,
+        alignItems: 'center'
+    },
+    botonTexto: {
+        color: '#FFFFFF',
+        fontWeight: '600',
+        fontSize: 16
     }
 });
