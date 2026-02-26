@@ -8,6 +8,9 @@ class HrEmployee(models.Model):
     
     _inherit = 'hr.employee'
 
+    salario_base = fields.Float(string="Salario Base Mensual")
+    precio_hora_extra = fields.Float(string="Precio Hora Extra")
+
     def fichar_desde_app(self, latitude=None, longitude=None):
 
         self.ensure_one()

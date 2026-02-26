@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <record id="view_employee_form_inherit_nomina" model="ir.ui.view">
+        <field name="name">hr.employee.form.inherit.nomina</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr.view_employee_form" />
+        <field name="arch" type="xml">
+
+            <!-- Lo añadimos al final del sheet -->
+            <xpath expr="//sheet" position="inside">
+                <group string="Datos salariales TimeNomina">
+                    <field name="salario_base" />
+                    <field name="precio_hora_extra" />
+                </group>
+            </xpath>
+
+        </field>
+    </record>
+
+</odoo>
