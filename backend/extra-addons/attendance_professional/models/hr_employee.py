@@ -58,6 +58,17 @@ class HrEmployee(models.Model):
                 'out_latitude': latitude,
                 'out_longitude': longitude,
             })
+                # 🧮 Calcular diferencia en horas
+            if ultimo_fichaje.check_in and ultimo_fichaje.check_out:
+                diferencia = ultimo_fichaje.check_out - ultimo_fichaje.check_in
+                horas_trabajadas = diferencia.total_seconds() / 3600
+
+                # 🚨 Límite máximo 12 horas
+                if horas_trabajadas > 12:
+                    ultimo_fichaje.write({
+                        'es_anomalia': True,
+                        'requiere_revision': True
+            })
 
             return {
                 "success": True,
@@ -66,3 +77,34 @@ class HrEmployee(models.Model):
                 "latitud": latitude,
                 "longitud": longitude
             }
+    def obtener_nominas_app(self):
+            self.ensure_one()
+
+    # 🔐 Seguridad: solo puede ver sus propias nóminas
+            if self.env.user.employee_id.id != self.id:
+                return {
+            "success": False,
+            "message": "No autorizado"
+        }
+
+            Nomina = self.env['nomina.nomina'].sudo()
+
+            nominas = Nomina.search_read(
+        [('empleado_id', '=', self.id)],
+        [
+            'id',
+            'mes',
+            'anio',
+            'salario_base',
+            'horas_extra',
+            'precio_hora_extra',
+            'complementos',
+            'total_bruto'
+        ],
+        order='anio desc, mes desc'
+    )
+
+            return {
+            "success": True,
+            "nominas": nominas
+    }

@@ -38,13 +38,14 @@ export default function LoginScreen({ navigation }) {
 
         // 🔐 1️⃣ Login
         const resultadoLogin = await loginOdoo(baseDatos, usuario, password);
-        console.log("Login OK, voy a obtener empleado vinculado")
+
 
         if (!resultadoLogin.exito) {
             setCargando(false);
             Alert.alert("Error", resultadoLogin.mensaje);
             return;
         }
+        console.log("Login OK, voy a obtener empleado vinculado")
 
         const uid = resultadoLogin.uid;
         console.log("Llamando a obtenerEmpleado");

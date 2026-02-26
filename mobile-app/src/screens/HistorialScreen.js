@@ -63,6 +63,17 @@ export default function HistorialScreen({ navigation }) {
             <Text>
                 Horas trabajadas: {item.worked_hours?.toFixed(2) || "0"}
             </Text>
+            {item.es_anomalia && (
+                <Text style={{ color: "red", marginTop: 5 }}>
+                    ⚠ Fichaje irregular - pendiente revisión RRHH
+                </Text>
+            )}
+            {item.pendiente_confirmacion && (
+                <Text style={{ color: "#d9534f", marginTop: 5 }}>
+                    ⚠ Este fichaje fue modificado por RRHH.
+                    Nos pondremos en contacto contigo para solucionarlo.
+                </Text>
+            )}
 
             {item.in_latitude !== null &&
                 item.in_latitude !== undefined &&

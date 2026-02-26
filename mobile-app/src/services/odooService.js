@@ -171,7 +171,10 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
                                 "check_out",
                                 "worked_hours",
                                 "in_latitude",
-                                "in_longitude"
+                                "in_longitude",
+                                "es_anomalia",
+                                "requiere_revision",
+                                "pendiente_confirmacion"
                             ],
                             order: "check_in desc"
                         }
@@ -304,4 +307,61 @@ export async function obtenerJustificaciones(baseDatos, uid, password, empleadoI
     } catch (error) {
         return { exito: false, mensaje: "Error de conexión" };
     }
+}
+
+export async function obtenerNominas(baseDatos, uid, password, empleadoId) {
+    const response = await fetch(URL_ODOO, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "call",
+            params: {
+                service: "object",
+                method: "execute_kw",
+                args: [
+                    baseDatos,
+                    uid,
+                    password,
+                    "hr.employee",
+                    "obtener_nominas_app",
+                    [empleadoId]
+                ]
+            },
+            id: 8,
+        }),
+    });
+
+    const data = await response.json();
+    return data.result;
+}
+
+export async function descargarNominaPDF(baseDatos, uid, password, nominaId) {
+
+    const response = await fetch(URL_ODOO, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "call",
+            params: {
+                service: "object",
+                method: "execute_kw",
+                args: [
+                    baseDatos,
+                    uid,
+                    password,
+                    "nomina.nomina",
+                    "descargar_pdf_app",
+                    [nominaId]
+                ]
+            },
+            id: 9,
+        }),
+    });
+
+    const data = await response.json();
+    console.log("Respuesta cruda JSONRPC PDF:", data);
+
+    return data.result;
 }

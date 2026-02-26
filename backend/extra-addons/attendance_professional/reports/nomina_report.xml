@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+
+    <template id="report_nomina_pdf">
+        <t t-call="web.basic_layout">
+            <t t-foreach="docs" t-as="doc">
+                <div class="page">
+                    <h2>Nómina mensual</h2>
+
+                    <p>
+                        <strong>Empleado:</strong>
+                        <t t-esc="doc.empleado_id.name" />
+                    </p>
+
+                    <p>
+                        <strong>Periodo:</strong>
+                    <t t-esc="doc.mes" /> / <t t-esc="doc.anio" />
+                    </p>
+
+                    <hr />
+
+                    <p>Salario base: <t t-esc="doc.salario_base" /> €</p>
+                    <p>Horas extra: <t t-esc="doc.horas_extra" /></p>
+                    <p>Precio hora extra: <t t-esc="doc.precio_hora_extra" /> €</p>
+                    <p>Complementos: <t t-esc="doc.complementos" /> €</p>
+
+                    <hr />
+
+                    <h3>Total bruto: <t t-esc="doc.total_bruto" /> €</h3>
+
+                </div>
+            </t>
+        </t>
+    </template>
+
+    <record id="action_report_nomina" model="ir.actions.report">
+        <field name="name">Nómina PDF</field>
+        <field name="model">nomina.nomina</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">attendance_professional.report_nomina_pdf</field>
+        <field name="report_file">attendance_professional.report_nomina_pdf</field>
+        <field name="binding_model_id" ref="model_nomina_nomina" />
+        <field name="binding_type">report</field>
+    </record>
+
+</odoo>

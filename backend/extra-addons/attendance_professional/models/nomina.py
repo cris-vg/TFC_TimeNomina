@@ -1,4 +1,5 @@
 from odoo import models, fields, api
+import base64
 
 
 class Nomina(models.Model):
@@ -68,14 +69,31 @@ class Nomina(models.Model):
         store=True
     )
     # Total calculado automáticamente
+    def descargar_pdf_app(self):
+        self.ensure_one()
+
+        if not self.env.user.employee_id or self.env.user.employee_id.id != self.empleado_id.id:
+            return {"success": False}
+
+        report_service = self.env['ir.actions.report']
+
+        pdf_content, _ = report_service._render_qweb_pdf(
+        'attendance_professional.report_nomina_pdf',
+        res_ids=[self.id]
+    )
+
+        return {
+        "success": True,
+        "pdf_base64": base64.b64encode(pdf_content).decode('utf-8'),
+        "filename": f"Nomina_{self.mes}_{self.anio}.pdf"
+    }
 
 
     # =====================================================
     # MÉTODOS DE CÁLCULO
     # =====================================================
-
-    @api.depends('salario_base', 'horas_extra', 'precio_hora_extra', 'complementos')
-    def _calcular_total_bruto(self):
+@api.depends('salario_base', 'horas_extra', 'precio_hora_extra', 'complementos')
+def _calcular_total_bruto(self):
         """
         Método que calcula automáticamente el total bruto de la nómina.
 

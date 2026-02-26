@@ -24,6 +24,10 @@ export default function HomeScreen({ navigation }) {
                 title="Mis justificaciones"
                 onPress={() => navigation.navigate("MisJustificaciones")}
             />
+            <Button
+                title="Ver Nóminas"
+                onPress={() => navigation.navigate("Nominas")}
+            />
 
         </View>
     );
