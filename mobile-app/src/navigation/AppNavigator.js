@@ -11,6 +11,7 @@ import JustificacionScreen from '../screens/JustificacionScreen';
 import MisJustificacionesScreen from '../screens/MisJustificacionesScreen';
 import NominasScreen from '../screens/NominasScreen';
 import DetalleNominaScreen from '../screens/DetalleNominaScreen';
+import FichajeManualScreen from '../screens/FichajeManualScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,6 +33,11 @@ export default function AppNavigator() {
                     name="Fichaje"
                     component={FichajeScreen}
                     options={{ title: "Fichar" }}
+                />
+                <Stack.Screen
+                    name="FichajeManual"
+                    component={FichajeManualScreen}
+                    options={{ title: "Fichaje Manual" }}
                 />
                 <Stack.Screen
                     name="Mapa"

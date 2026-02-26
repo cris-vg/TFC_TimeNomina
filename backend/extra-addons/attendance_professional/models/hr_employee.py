@@ -1,21 +1,40 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
-from odoo.exceptions import UserError
-from datetime import datetime
 
 
 class HrEmployee(models.Model):
-    
+
     _inherit = 'hr.employee'
 
     salario_base = fields.Float(string="Salario Base Mensual")
     precio_hora_extra = fields.Float(string="Precio Hora Extra")
 
+    # =====================================================
+    # HORARIO TEÓRICO
+    # =====================================================
+
+    hora_entrada_teorica = fields.Float(
+        string="Hora entrada teórica (ej: 8.0 = 08:00)"
+    )
+
+    hora_salida_teorica = fields.Float(
+        string="Hora salida teórica (ej: 16.5 = 16:30)"
+    )
+
+    margen_minutos = fields.Integer(
+        string="Margen permitido (minutos)",
+        default=10
+    )
+
+    # =====================================================
+    # FICHAJE DESDE APP
+    # =====================================================
+
     def fichar_desde_app(self, latitude=None, longitude=None):
 
         self.ensure_one()
 
-        # 🔐 Verificar que el usuario logueado tenga empleado vinculado
+        # 🔐 Verificar usuario vinculado
         if not self.env.user.employee_id:
             return {
                 "success": False,
@@ -23,7 +42,7 @@ class HrEmployee(models.Model):
                 "message": "Usuario no vinculado a ningún empleado"
             }
 
-        # 🔐 Verificar que el empleado es el suyo
+        # 🔐 Verificar que ficha su propio empleado
         if self.env.user.employee_id.id != self.id:
             return {
                 "success": False,
@@ -40,12 +59,32 @@ class HrEmployee(models.Model):
 
         ahora = fields.Datetime.now()
 
+        # Convertir hora actual a float (ej: 8:30 = 8.5)
+        hora_actual = ahora.hour + (ahora.minute / 60.0)
+
+        fuera_de_rango = False
+
+        # =====================================================
+        # ENTRADA
+        # =====================================================
         if not ultimo_fichaje:
+
+            if self.hora_entrada_teorica and self.margen_minutos:
+
+                margen_horas = self.margen_minutos / 60.0
+                rango_min = self.hora_entrada_teorica - margen_horas
+                rango_max = self.hora_entrada_teorica + margen_horas
+
+                if hora_actual < rango_min or hora_actual > rango_max:
+                    fuera_de_rango = True
+
             Attendance.create({
                 'employee_id': self.id,
                 'check_in': ahora,
                 'in_latitude': latitude,
                 'in_longitude': longitude,
+                'es_anomalia': fuera_de_rango,
+                'requiere_revision': fuera_de_rango
             })
 
             return {
@@ -53,15 +92,33 @@ class HrEmployee(models.Model):
                 "estado": "entrada",
                 "timestamp": ahora,
                 "latitud": latitude,
-                "longitud": longitude
+                "longitud": longitude,
+                "fuera_de_rango": fuera_de_rango
             }
+
+        # =====================================================
+        # SALIDA
+        # =====================================================
         else:
+
+            if self.hora_salida_teorica and self.margen_minutos:
+
+                margen_horas = self.margen_minutos / 60.0
+                rango_min = self.hora_salida_teorica - margen_horas
+                rango_max = self.hora_salida_teorica + margen_horas
+
+                if hora_actual < rango_min or hora_actual > rango_max:
+                    fuera_de_rango = True
+
             ultimo_fichaje.write({
                 'check_out': ahora,
                 'out_latitude': latitude,
                 'out_longitude': longitude,
+                'es_anomalia': fuera_de_rango,
+                'requiere_revision': fuera_de_rango
             })
-                # 🧮 Calcular diferencia en horas
+
+            # 🧮 Calcular diferencia en horas
             if ultimo_fichaje.check_in and ultimo_fichaje.check_out:
                 diferencia = ultimo_fichaje.check_out - ultimo_fichaje.check_in
                 horas_trabajadas = diferencia.total_seconds() / 3600
@@ -71,43 +128,159 @@ class HrEmployee(models.Model):
                     ultimo_fichaje.write({
                         'es_anomalia': True,
                         'requiere_revision': True
-            })
+                    })
 
             return {
                 "success": True,
                 "estado": "salida",
                 "timestamp": ahora,
                 "latitud": latitude,
-                "longitud": longitude
+                "longitud": longitude,
+                "fuera_de_rango": fuera_de_rango
             }
-    def obtener_nominas_app(self):
-            self.ensure_one()
+        
+     # =====================================================
+    # FICHAJE MANUAL DESDE APP
+    # =====================================================
 
-    # 🔐 Seguridad: solo puede ver sus propias nóminas
-            if self.env.user.employee_id.id != self.id:
+    def fichaje_manual_desde_app(self, fecha_hora, tipo, motivo):
+
+        self.ensure_one()
+
+        # 🔐 Seguridad: empleado vinculado
+        if not self.env.user.employee_id:
+            return {
+                "success": False,
+                "message": "Usuario no vinculado a ningún empleado"
+            }
+
+        if self.env.user.employee_id.id != self.id:
+            return {
+                "success": False,
+                "message": "No autorizado"
+            }
+
+        if not motivo:
+            return {
+                "success": False,
+                "message": "El motivo es obligatorio"
+            }
+
+        Attendance = self.env['hr.attendance'].sudo()
+        Justification = self.env['attendance.justification'].sudo()
+
+        # Convertir string a datetime
+        try:
+            fecha_dt = fields.Datetime.from_string(fecha_hora)
+        except Exception:
+            return {
+                "success": False,
+                "message": "Formato de fecha incorrecto"
+            }
+
+        # =====================================================
+        # ENTRADA MANUAL
+        # =====================================================
+        if tipo == "entrada":
+
+            # Verificar que no haya fichaje abierto
+            abierto = Attendance.search([
+                ('employee_id', '=', self.id),
+                ('check_out', '=', False)
+            ], limit=1)
+
+            if abierto:
                 return {
-            "success": False,
-            "message": "No autorizado"
+                    "success": False,
+                    "message": "Ya existe una entrada sin salida"
+                }
+
+            nuevo = Attendance.create({
+                'employee_id': self.id,
+                'check_in': fecha_dt,
+                'es_anomalia': True,
+                'requiere_revision': True
+            })
+
+        # =====================================================
+        # SALIDA MANUAL
+        # =====================================================
+        elif tipo == "salida":
+
+            abierto = Attendance.search([
+                ('employee_id', '=', self.id),
+                ('check_out', '=', False)
+            ], limit=1)
+
+            if not abierto:
+                return {
+                    "success": False,
+                    "message": "No existe una entrada abierta para cerrar"
+                }
+
+            abierto.write({
+                'check_out': fecha_dt,
+                'es_anomalia': True,
+                'requiere_revision': True
+            })
+
+            nuevo = abierto
+
+        else:
+            return {
+                "success": False,
+                "message": "Tipo inválido"
+            }
+
+        # =====================================================
+        # CREAR JUSTIFICACIÓN AUTOMÁTICA
+        # =====================================================
+
+        Justification.create({
+            'employee_id': self.id,
+            'attendance_id': nuevo.id,
+            'tipo': 'olvido',
+            'descripcion': motivo,
+            'estado': 'pendiente'
+        })
+
+        return {
+            "success": True,
+            "message": "Fichaje manual enviado a revisión"
         }
 
-            Nomina = self.env['nomina.nomina'].sudo()
+    # =====================================================
+    # OBTENER NÓMINAS PARA APP
+    # =====================================================
 
-            nominas = Nomina.search_read(
-        [('empleado_id', '=', self.id)],
-        [
-            'id',
-            'mes',
-            'anio',
-            'salario_base',
-            'horas_extra',
-            'precio_hora_extra',
-            'complementos',
-            'total_bruto'
-        ],
-        order='anio desc, mes desc'
-    )
+    def obtener_nominas_app(self):
 
+        self.ensure_one()
+
+        if self.env.user.employee_id.id != self.id:
             return {
+                "success": False,
+                "message": "No autorizado"
+            }
+
+        Nomina = self.env['nomina.nomina'].sudo()
+
+        nominas = Nomina.search_read(
+            [('empleado_id', '=', self.id)],
+            [
+                'id',
+                'mes',
+                'anio',
+                'salario_base',
+                'horas_extra',
+                'precio_hora_extra',
+                'complementos',
+                'total_bruto'
+            ],
+            order='anio desc, mes desc'
+        )
+
+        return {
             "success": True,
             "nominas": nominas
-    }
+        }

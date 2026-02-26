@@ -141,6 +141,54 @@ export async function ficharDesdeApp(
     }
 }
 
+/**
+ * 📝 FICHAJE MANUAL
+ */
+export async function fichajeManual(
+    baseDatos,
+    uid,
+    password,
+    empleadoId,
+    fechaHoraISO,
+    tipo,
+    motivo
+) {
+    try {
+        const response = await fetch(URL_ODOO, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    service: "object",
+                    method: "execute_kw",
+                    args: [
+                        baseDatos,
+                        uid,
+                        password,
+                        "hr.employee",
+                        "fichaje_manual_desde_app",
+                        [empleadoId, fechaHoraISO, tipo, motivo]
+                    ]
+                },
+                id: 10,
+            }),
+        });
+
+        const data = await response.json();
+
+        if (data.result && data.result.success) {
+            return { exito: true };
+        }
+
+        return { exito: false, mensaje: data.result?.message || "Error enviando fichaje manual" };
+
+    } catch (error) {
+        return { exito: false, mensaje: "Error de conexión" };
+    }
+}
+
 
 /**
  * 📜 OBTENER HISTORIAL DE FICHAJES

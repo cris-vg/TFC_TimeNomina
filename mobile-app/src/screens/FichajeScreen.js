@@ -22,7 +22,14 @@ export default function FichajeScreen({ navigation }) {
         const { status } = await Location.requestForegroundPermissionsAsync();
 
         if (status !== 'granted') {
-            Alert.alert("Permiso denegado", "No se puede acceder a la ubicación");
+            Alert.alert(
+                "Ubicación necesaria",
+                "La empresa requiere la ubicación para validar el fichaje.",
+                [
+                    { text: "Cancelar", style: "cancel" },
+                    { text: "Reintentar", onPress: manejarFichaje }
+                ]
+            );
             return null;
         }
 
@@ -111,6 +118,10 @@ ${direccion.country || ""}
                 "\n\nDirección:\n" + direccion,
                 [
                     {
+                        text: "Aceptar",
+                        style: "cancel"
+                    },
+                    {
                         text: "Ver ubicación",
                         onPress: () => navigation.navigate("Mapa", {
                             latitud: coordenadas.latitud,
@@ -137,6 +148,13 @@ ${direccion.country || ""}
                 onPress={manejarFichaje}
             />
             {/* Espacio visual */}
+            <View style={{ height: 20 }} />
+
+            <Button
+                title="Fichaje Manual"
+                onPress={() => navigation.navigate("FichajeManual")}
+            />
+
             <View style={{ height: 20 }} />
 
             {/* Botón nueva justificación */}

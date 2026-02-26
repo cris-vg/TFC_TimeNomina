@@ -13,6 +13,12 @@
                     <field name="salario_base" />
                     <field name="precio_hora_extra" />
                 </group>
+                <group string="Horario TimeNomina">
+                    <field name="hora_entrada_teorica" />
+                    <field name="hora_salida_teorica" />
+                    <field name="margen_minutos" />
+                </group>
+
             </xpath>
 
         </field>
