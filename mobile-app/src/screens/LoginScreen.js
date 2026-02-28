@@ -56,6 +56,7 @@ export default function LoginScreen({ navigation }) {
             return;
         }
 
+
         login(
             usuario,
             uid,
@@ -64,7 +65,7 @@ export default function LoginScreen({ navigation }) {
             resultadoEmpleado.empleado.name
         );
 
-        navigation.replace("Home");
+
     };
 
     return (

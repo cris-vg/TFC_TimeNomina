@@ -4,7 +4,8 @@ import {
     Text,
     StyleSheet,
     ActivityIndicator,
-    ScrollView
+    ScrollView,
+    TouchableOpacity
 } from 'react-native';
 
 import { AuthContext } from '../context/AuthContext';
@@ -12,7 +13,8 @@ import { obtenerPerfil } from '../services/odooService';
 
 export default function PerfilScreen() {
 
-    const { uid, password, empleadoId } = useContext(AuthContext);
+    const { uid, password, empleadoId, logout } = useContext(AuthContext);
+
     const [perfil, setPerfil] = useState(null);
     const [cargando, setCargando] = useState(true);
 
@@ -56,6 +58,7 @@ export default function PerfilScreen() {
 
     return (
         <ScrollView contentContainerStyle={styles.container}>
+
             <Text style={styles.titulo}>{perfil.nombre}</Text>
 
             <View style={styles.card}>
@@ -84,6 +87,12 @@ export default function PerfilScreen() {
                 <Text style={styles.label}>Margen permitido:</Text>
                 <Text>{perfil.margen_minutos} minutos</Text>
             </View>
+
+            {/* 🔴 BOTÓN CERRAR SESIÓN */}
+            <TouchableOpacity style={styles.botonLogout} onPress={logout}>
+                <Text style={styles.textoLogout}>Cerrar sesión</Text>
+            </TouchableOpacity>
+
         </ScrollView>
     );
 }
@@ -112,5 +121,16 @@ const styles = StyleSheet.create({
         flex: 1,
         justifyContent: "center",
         alignItems: "center"
+    },
+    botonLogout: {
+        marginTop: 30,
+        backgroundColor: "#d9534f",
+        padding: 12,
+        borderRadius: 8,
+        alignItems: "center"
+    },
+    textoLogout: {
+        color: "white",
+        fontWeight: "bold"
     }
 });
