@@ -28,6 +28,10 @@ export default function HomeScreen({ navigation }) {
                 title="Ver Nóminas"
                 onPress={() => navigation.navigate("Nominas")}
             />
+            <Button
+                title="Mi Perfil"
+                onPress={() => navigation.navigate("Perfil")}
+            />
 
         </View>
     );

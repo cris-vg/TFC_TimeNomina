@@ -12,6 +12,7 @@ import MisJustificacionesScreen from '../screens/MisJustificacionesScreen';
 import NominasScreen from '../screens/NominasScreen';
 import DetalleNominaScreen from '../screens/DetalleNominaScreen';
 import FichajeManualScreen from '../screens/FichajeManualScreen';
+import PerfilScreen from '../screens/PerfilScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -68,6 +69,11 @@ export default function AppNavigator() {
                     name="DetalleNomina"
                     component={DetalleNominaScreen}
                     options={{ title: "Detalle Nómina" }}
+                />
+                <Stack.Screen
+                    name="Perfil"
+                    component={PerfilScreen}
+                    options={{ title: "Mi Perfil" }}
                 />
             </Stack.Navigator>
         </NavigationContainer>

@@ -60,3 +60,52 @@ class HrAttendance(models.Model):
                     )
 
         return result
+    
+        # =====================================================
+    # CONFIRMACIÓN EMPLEADO DESDE APP
+    # =====================================================
+
+    def aceptar_modificacion_desde_app(self):
+        self.ensure_one()
+
+        employee = self.employee_id.sudo()
+
+        if employee.user_id != self.env.user:
+            return {"success": False, "message": "No autorizado"}
+
+        if not self.pendiente_confirmacion:
+            return {"success": False, "message": "No hay modificación pendiente"}
+
+        self.sudo().write({
+        'estado_confirmacion': 'aceptado',
+        'pendiente_confirmacion': False,
+        'es_anomalia': False,
+        'requiere_revision': False
+    })
+
+        return {"success": True}
+
+    def rechazar_modificacion_desde_app(self, motivo):
+        self.ensure_one()
+
+        employee = self.employee_id.sudo()
+
+        if employee.user_id != self.env.user:
+            return {"success": False, "message": "No autorizado"}
+
+        if not motivo:
+            return {"success": False, "message": "Debe indicar un motivo"}
+
+        if not self.pendiente_confirmacion:
+            return {"success": False, "message": "No hay modificación pendiente"}
+
+        self.sudo().write({
+        'estado_confirmacion': 'rechazado',
+        'pendiente_confirmacion': False
+    })
+
+        self.message_post(
+        body=f"❌ El empleado ha rechazado la modificación.<br/>Motivo: {motivo}"
+    )
+
+        return {"success": True}

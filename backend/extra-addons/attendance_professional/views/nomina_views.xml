@@ -79,4 +79,25 @@
         action="action_nomina"
         sequence="1" />
 
+    <!-- ============================= -->
+    <!-- ACCIÓN FICHAJES IRREGULARES -->
+    <!-- ============================= -->
+    <record id="action_fichajes_irregulares" model="ir.actions.act_window">
+        <field name="name">Fichajes Irregulares</field>
+        <field name="res_model">hr.attendance</field>
+        <field name="view_mode">list,form</field>
+        <field name="domain">
+            ['|', ('es_anomalia','=',True), ('pendiente_confirmacion','=',True)]
+        </field>
+    </record>
+
+    <!-- SUBMENÚ FICHAJES IRREGULARES -->
+    <menuitem
+        id="menu_fichajes_irregulares"
+        name="Fichajes Irregulares"
+        parent="menu_time_nomina_root"
+        action="action_fichajes_irregulares"
+        sequence="2"
+    />
+
 </odoo>

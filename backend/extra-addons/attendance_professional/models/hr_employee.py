@@ -284,3 +284,43 @@ class HrEmployee(models.Model):
             "success": True,
             "nominas": nominas
         }
+    
+    # =====================================================
+    # OBTENER PERFIL EMPLEADO PARA APP
+    # =====================================================
+
+    def obtener_perfil_app(self):
+
+        self.ensure_one()
+
+        # 🔐 Seguridad
+        if not self.env.user.employee_id or self.env.user.employee_id.id != self.id:
+            return {
+                "success": False,
+                "message": "No autorizado"
+            }
+        empleado = self.sudo()
+
+        # Función interna para convertir float a HH:MM
+        def formatear_hora(hora_float):
+            if not hora_float:
+                return None
+            horas = int(hora_float)
+            minutos = int(round((hora_float - horas) * 60))
+            return f"{horas:02d}:{minutos:02d}"
+
+        perfil = {
+            "nombre": empleado.name,
+            "email": empleado.work_email or "",
+            "telefono": empleado.work_phone or "",
+            "puesto": empleado.job_id.name if empleado.job_id else "",
+            "departamento": empleado.department_id.name if empleado.department_id else "",
+            "hora_entrada": formatear_hora(empleado.hora_entrada_teorica),
+            "hora_salida": formatear_hora(empleado.hora_salida_teorica),
+            "margen_minutos": empleado.margen_minutos or 0
+    }
+
+        return {
+        "success": True,
+        "perfil": perfil
+    }

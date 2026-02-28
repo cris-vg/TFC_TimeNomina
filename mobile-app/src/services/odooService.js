@@ -189,6 +189,112 @@ export async function fichajeManual(
     }
 }
 
+/**
+ * ✅ ACEPTAR MODIFICACIÓN
+ */
+export async function aceptarModificacion(
+    baseDatos,
+    uid,
+    password,
+    attendanceId
+) {
+    const response = await fetch(URL_ODOO, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "call",
+            params: {
+                service: "object",
+                method: "execute_kw",
+                args: [
+                    baseDatos,
+                    uid,
+                    password,
+                    "hr.attendance",
+                    "aceptar_modificacion_desde_app",
+                    [[attendanceId]]
+                ]
+            },
+            id: 11,
+        }),
+    });
+
+    const data = await response.json();
+
+    console.log("RAW aceptar:", data);
+
+    if (data.result) {
+        return data.result;
+    }
+
+    if (data.error) {
+        return {
+            success: false,
+            message: data.error.data?.message || "Error servidor"
+        };
+    }
+
+    return {
+        success: false,
+        message: "Respuesta inválida"
+    };
+}
+
+
+/**
+ * ❌ RECHAZAR MODIFICACIÓN
+ */
+export async function rechazarModificacion(
+    baseDatos,
+    uid,
+    password,
+    attendanceId,
+    motivo
+) {
+    const response = await fetch(URL_ODOO, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "call",
+            params: {
+                service: "object",
+                method: "execute_kw",
+                args: [
+                    baseDatos,
+                    uid,
+                    password,
+                    "hr.attendance",
+                    "rechazar_modificacion_desde_app",
+                    [[attendanceId], motivo]
+                ]
+            },
+            id: 12,
+        }),
+    });
+
+    const data = await response.json();
+
+    console.log("RAW rechazar:", data);
+
+    if (data.result) {
+        return data.result;
+    }
+
+    if (data.error) {
+        return {
+            success: false,
+            message: data.error.data?.message || "Error servidor"
+        };
+    }
+
+    return {
+        success: false,
+        message: "Respuesta inválida"
+    };
+}
+
 
 /**
  * 📜 OBTENER HISTORIAL DE FICHAJES
@@ -215,6 +321,7 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
                         ],
                         {
                             fields: [
+                                "id",
                                 "check_in",
                                 "check_out",
                                 "worked_hours",
@@ -412,4 +519,45 @@ export async function descargarNominaPDF(baseDatos, uid, password, nominaId) {
     console.log("Respuesta cruda JSONRPC PDF:", data);
 
     return data.result;
+}
+
+/**
+ * 👤 OBTENER PERFIL EMPLEADO
+ */
+export async function obtenerPerfil(baseDatos, uid, password, empleadoId) {
+    try {
+        const response = await fetch(URL_ODOO, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                jsonrpc: "2.0",
+                method: "call",
+                params: {
+                    service: "object",
+                    method: "execute_kw",
+                    args: [
+                        baseDatos,
+                        uid,
+                        password,
+                        "hr.employee",
+                        "obtener_perfil_app",
+                        [empleadoId]
+                    ]
+                },
+                id: 20,
+            }),
+        });
+
+        const data = await response.json();
+        console.log("RAW perfil:", data);
+
+        if (data.result && data.result.success) {
+            return { exito: true, datos: data.result.perfil };
+        }
+
+        return { exito: false, mensaje: data.result?.message || "Error obteniendo perfil" };
+
+    } catch (error) {
+        return { exito: false, mensaje: "Error de conexión" };
+    }
 }
