@@ -1,16 +1,27 @@
+// ======================================================
+// 📌 JustificacionScreen
+// Pantalla para crear una nueva justificación.
+// - Permite seleccionar tipo
+// - Introducir descripción
+// - Adjuntar documento opcional
+// - Enviar al backend Odoo
+// ======================================================
+
 import React, { useState, useContext } from 'react';
 import {
     View,
     Text,
     TextInput,
-    Button,
     StyleSheet,
     Alert,
-    ScrollView
+    ScrollView,
+    TouchableOpacity,
+    ActivityIndicator
 } from 'react-native';
 
 import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
+import { Ionicons } from '@expo/vector-icons';
 
 import { AuthContext } from '../context/AuthContext';
 import { crearJustificacion } from '../services/odooService';
@@ -19,6 +30,7 @@ export default function JustificacionScreen({ navigation }) {
 
     const { uid, password, empleadoId } = useContext(AuthContext);
 
+    // 📦 Estados locales
     const [tipo, setTipo] = useState('');
     const [descripcion, setDescripcion] = useState('');
     const [archivoBase64, setArchivoBase64] = useState(null);
@@ -27,6 +39,11 @@ export default function JustificacionScreen({ navigation }) {
 
     const baseDatos = "attendance_app";
 
+    /**
+     * =====================================================
+     * 📑 TIPOS DISPONIBLES DE JUSTIFICACIÓN
+     * =====================================================
+     */
     const TIPOS_JUSTIFICACION = [
         { label: "Retraso", value: "retraso" },
         { label: "Olvido de fichaje", value: "olvido" },
@@ -35,7 +52,12 @@ export default function JustificacionScreen({ navigation }) {
         { label: "Otro", value: "otro" },
     ];
 
-    // 📎 Seleccionar documento
+    /**
+     * =====================================================
+     * 📎 SELECCIONAR DOCUMENTO
+     * =====================================================
+     * Permite adjuntar imagen o PDF como evidencia.
+     */
     const seleccionarDocumento = async () => {
 
         const resultado = await DocumentPicker.getDocumentAsync({
@@ -59,12 +81,18 @@ export default function JustificacionScreen({ navigation }) {
                 setArchivoBase64(base64data);
                 setNombreArchivo(archivo.name);
             };
+
         } catch (error) {
             Alert.alert("Error", "No se pudo procesar el archivo");
         }
     };
 
-    // 📤 Enviar justificación
+    /**
+     * =====================================================
+     * 📤 ENVIAR JUSTIFICACIÓN
+     * =====================================================
+     * Valida campos y envía datos al backend.
+     */
     const manejarEnvio = async () => {
 
         if (!tipo) {
@@ -99,10 +127,7 @@ export default function JustificacionScreen({ navigation }) {
 
         if (resultado.exito) {
             Alert.alert("Correcto", "Justificación enviada", [
-                {
-                    text: "Aceptar",
-                    onPress: () => navigation.goBack()
-                }
+                { text: "Aceptar", onPress: () => navigation.goBack() }
             ]);
         } else {
             Alert.alert("Error", resultado.mensaje);
@@ -110,82 +135,164 @@ export default function JustificacionScreen({ navigation }) {
     };
 
     return (
-        <ScrollView contentContainerStyle={styles.contenedor}>
+
+        <ScrollView contentContainerStyle={styles.container}>
 
             <Text style={styles.titulo}>
                 Nueva Justificación
             </Text>
 
-            {/* Selector de tipo */}
-            <Picker
-                selectedValue={tipo}
-                onValueChange={(itemValue) => setTipo(itemValue)}
-                style={styles.picker}
-            >
-                <Picker.Item label="Selecciona tipo..." value="" />
-                {TIPOS_JUSTIFICACION.map((item) => (
-                    <Picker.Item
-                        key={item.value}
-                        label={item.label}
-                        value={item.value}
-                    />
-                ))}
-            </Picker>
+            {/* =====================================================
+               🧩 SELECTOR DE TIPO
+            ===================================================== */}
+            <View style={styles.card}>
+                <Text style={styles.label}>Tipo</Text>
 
-            {/* Descripción */}
-            <TextInput
-                style={styles.textArea}
-                placeholder="Describe el motivo..."
-                value={descripcion}
-                onChangeText={setDescripcion}
-                multiline
-            />
-
-            {/* Adjuntar documento */}
-            <View style={{ marginBottom: 15 }}>
-                <Button
-                    title="Adjuntar documento"
-                    onPress={seleccionarDocumento}
-                />
-
-                {nombreArchivo !== "" && (
-                    <Text style={{ marginTop: 10 }}>
-                        📎 {nombreArchivo}
-                    </Text>
-                )}
+                <Picker
+                    selectedValue={tipo}
+                    onValueChange={(itemValue) => setTipo(itemValue)}
+                    style={styles.picker}
+                >
+                    <Picker.Item label="Selecciona tipo..." value="" />
+                    {TIPOS_JUSTIFICACION.map((item) => (
+                        <Picker.Item
+                            key={item.value}
+                            label={item.label}
+                            value={item.value}
+                        />
+                    ))}
+                </Picker>
             </View>
 
-            <Button
-                title={cargando ? "Enviando..." : "Enviar Justificación"}
+            {/* =====================================================
+               ✏ DESCRIPCIÓN
+            ===================================================== */}
+            <View style={styles.card}>
+                <Text style={styles.label}>Descripción</Text>
+
+                <TextInput
+                    style={styles.textArea}
+                    placeholder="Describe el motivo..."
+                    value={descripcion}
+                    onChangeText={setDescripcion}
+                    multiline
+                />
+            </View>
+
+            {/* =====================================================
+               📎 ADJUNTAR DOCUMENTO
+            ===================================================== */}
+            <TouchableOpacity
+                style={styles.botonSecundario}
+                onPress={seleccionarDocumento}
+            >
+                <Ionicons name="attach-outline" size={18} color="#2F5D9F" />
+                <Text style={styles.textoSecundario}>
+                    Adjuntar documento
+                </Text>
+            </TouchableOpacity>
+
+            {nombreArchivo !== "" && (
+                <Text style={styles.archivoSeleccionado}>
+                    📎 {nombreArchivo}
+                </Text>
+            )}
+
+            {/* =====================================================
+               📤 BOTÓN ENVIAR
+            ===================================================== */}
+            <TouchableOpacity
+                style={styles.botonPrincipal}
                 onPress={manejarEnvio}
-            />
+                disabled={cargando}
+            >
+                {cargando ? (
+                    <ActivityIndicator color="#FFFFFF" />
+                ) : (
+                    <Text style={styles.textoBoton}>
+                        Enviar Justificación
+                    </Text>
+                )}
+            </TouchableOpacity>
 
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    contenedor: {
-        flexGrow: 1,
-        justifyContent: 'center',
+
+    container: {
         padding: 20
     },
+
     titulo: {
         fontSize: 22,
-        fontWeight: 'bold',
+        fontWeight: "600",
         marginBottom: 20,
-        textAlign: 'center'
+        color: "#2F5D9F"
     },
+
+    card: {
+        backgroundColor: "#FFFFFF",
+        padding: 15,
+        borderRadius: 12,
+        marginBottom: 15,
+        elevation: 3,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 5,
+        shadowOffset: { width: 0, height: 2 }
+    },
+
+    label: {
+        fontWeight: "600",
+        marginBottom: 8,
+        color: "#555"
+    },
+
     picker: {
-        marginBottom: 15
+        marginTop: -8
     },
+
     textArea: {
         borderWidth: 1,
-        borderColor: '#ccc',
-        borderRadius: 5,
-        padding: 10,
-        marginBottom: 20,
+        borderColor: "#E0E0E0",
+        borderRadius: 10,
+        padding: 12,
         height: 120,
-        textAlignVertical: 'top'
+        textAlignVertical: "top"
+    },
+
+    botonPrincipal: {
+        marginTop: 20,
+        backgroundColor: "#2F5D9F",
+        paddingVertical: 15,
+        borderRadius: 12,
+        alignItems: "center"
+    },
+
+    textoBoton: {
+        color: "#FFFFFF",
+        fontWeight: "600",
+        fontSize: 16
+    },
+
+    botonSecundario: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+        marginBottom: 10
+    },
+
+    textoSecundario: {
+        color: "#2F5D9F",
+        fontWeight: "600"
+    },
+
+    archivoSeleccionado: {
+        fontSize: 13,
+        marginBottom: 15,
+        color: "#555"
     }
+
 });

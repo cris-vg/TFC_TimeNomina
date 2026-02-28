@@ -561,3 +561,40 @@ export async function obtenerPerfil(baseDatos, uid, password, empleadoId) {
         return { exito: false, mensaje: "Error de conexión" };
     }
 }
+
+// =====================================================
+// OBTENER ESTADO JORNADA
+// =====================================================
+
+export async function obtenerEstadoJornada(baseDatos, uid, password, empleadoId) {
+
+    const response = await fetch(URL_ODOO, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            jsonrpc: "2.0",
+            method: "call",
+            params: {
+                service: "object",
+                method: "execute_kw",
+                args: [
+                    baseDatos,
+                    uid,
+                    password,
+                    "hr.employee",
+                    "obtener_estado_jornada_app",
+                    [[empleadoId]]
+                ]
+            },
+            id: 99
+        })
+    });
+
+    const data = await response.json();
+
+    if (data.result?.success) {
+        return { exito: true, datos: data.result };
+    } else {
+        return { exito: false, mensaje: data.result?.message };
+    }
+}

@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-
+import { View, ActivityIndicator, Image } from "react-native";
 import { AuthContext } from '../context/AuthContext';
 
 import LoginScreen from '../screens/LoginScreen';
@@ -24,7 +24,25 @@ export default function AppNavigator() {
 
     // ⏳ Mientras carga sesión guardada
     if (loading) {
-        return null; // luego podemos poner un spinner bonito
+        return (
+            <View style={{
+                flex: 1,
+                justifyContent: "center",
+                alignItems: "center",
+                backgroundColor: "#3A4A6A"
+            }}>
+                <Image
+                    source={require('../../assets/Logo.png')}
+                    style={{
+                        width: 140,
+                        height: 140,
+                        resizeMode: 'contain',
+                        marginBottom: 20
+                    }}
+                />
+                <ActivityIndicator size="large" color="#FFFFFF" />
+            </View>
+        );
     }
 
     return (

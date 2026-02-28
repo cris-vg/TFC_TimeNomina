@@ -324,3 +324,37 @@ class HrEmployee(models.Model):
         "success": True,
         "perfil": perfil
     }
+
+    # =====================================================
+    # OBTENER ESTADO ACTUAL DE JORNADA PARA APP
+    # =====================================================
+
+    def obtener_estado_jornada_app(self):
+
+        self.ensure_one()
+
+        if not self.env.user.employee_id or self.env.user.employee_id.id != self.id:
+            return {
+                "success": False,
+                "message": "No autorizado"
+            }
+
+        Attendance = self.env['hr.attendance'].sudo()
+
+        fichaje_abierto = Attendance.search([
+            ('employee_id', '=', self.id),
+            ('check_out', '=', False)
+        ], order='check_in desc', limit=1)
+
+        if fichaje_abierto and not fichaje_abierto.check_out:
+            return {
+                "success": True,
+                "trabajando": True,
+                "hora_entrada": fichaje_abierto.check_in.strftime('%Y-%m-%d %H:%M:%S')
+            }
+
+        return {
+            "success": True,
+            "trabajando": False,
+            "hora_entrada": None
+        }

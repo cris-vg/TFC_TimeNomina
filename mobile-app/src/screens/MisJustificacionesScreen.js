@@ -1,3 +1,12 @@
+// ======================================================
+// 📌 MisJustificacionesScreen
+// Pantalla que muestra el listado de justificaciones
+// enviadas por el empleado.
+// - Permite refrescar con pull-to-refresh
+// - Muestra estado visual (pendiente / aprobada / rechazada)
+// - Muestra comentario de RRHH si existe
+// ======================================================
+
 import React, { useEffect, useState, useContext } from 'react';
 import {
     View,
@@ -21,11 +30,22 @@ export default function MisJustificacionesScreen() {
 
     const baseDatos = "attendance_app";
 
+    /**
+     * =====================================================
+     * 🔄 CARGA INICIAL
+     * =====================================================
+     */
     useEffect(() => {
         cargarJustificaciones();
     }, []);
 
+    /**
+     * =====================================================
+     * 📥 OBTENER JUSTIFICACIONES DESDE BACKEND
+     * =====================================================
+     */
     const cargarJustificaciones = async () => {
+
         const resultado = await obtenerJustificaciones(
             baseDatos,
             uid,
@@ -41,12 +61,23 @@ export default function MisJustificacionesScreen() {
         setRefreshing(false);
     };
 
+    /**
+     * =====================================================
+     * 🔄 REFRESH MANUAL (PULL DOWN)
+     * =====================================================
+     */
     const onRefresh = () => {
         setRefreshing(true);
         cargarJustificaciones();
     };
 
+    /**
+     * =====================================================
+     * 🔤 TRADUCIR TIPO DE JUSTIFICACIÓN
+     * =====================================================
+     */
     const traducirTipo = (tipo) => {
+
         const mapa = {
             retraso: "Retraso",
             olvido: "Olvido de fichaje",
@@ -54,11 +85,18 @@ export default function MisJustificacionesScreen() {
             ausencia_parcial: "Ausencia parcial",
             otro: "Otro"
         };
+
         return mapa[tipo] || tipo;
     };
 
+    /**
+     * =====================================================
+     * 📅 FORMATEAR FECHA
+     * =====================================================
+     */
     const formatearFecha = (fecha) => {
-        return new Date(fecha).toLocaleString("es-ES", {
+
+        return new Date(fecha + "Z").toLocaleString("es-ES", {
             day: "2-digit",
             month: "short",
             year: "numeric",
@@ -67,20 +105,34 @@ export default function MisJustificacionesScreen() {
         });
     };
 
-    const obtenerEstiloEstado = (estado) => {
-        if (estado === "aprobado") {
-            return { color: "#2ecc71", label: "🟢 Aprobada" };
-        }
-        if (estado === "rechazado") {
-            return { color: "#e74c3c", label: "🔴 Rechazada" };
-        }
-        return { color: "#f39c12", label: "🟡 Pendiente" };
+    /**
+     * =====================================================
+     * 🎨 ESTILO VISUAL SEGÚN ESTADO
+     * =====================================================
+     */
+    const obtenerColorEstado = (estado) => {
+
+        if (estado === "aprobado") return "#2ecc71";
+        if (estado === "rechazado") return "#e74c3c";
+        return "#f39c12"; // pendiente
     };
 
+    // ================= LOADING =================
     if (cargando) {
         return (
             <View style={styles.cargando}>
-                <ActivityIndicator size="large" />
+                <ActivityIndicator size="large" color="#2F5D9F" />
+            </View>
+        );
+    }
+
+    // ================= EMPTY STATE =================
+    if (justificaciones.length === 0) {
+        return (
+            <View style={styles.cargando}>
+                <Text style={{ color: "#777" }}>
+                    No tienes justificaciones registradas.
+                </Text>
             </View>
         );
     }
@@ -88,48 +140,55 @@ export default function MisJustificacionesScreen() {
     return (
         <FlatList
             data={justificaciones}
-            keyExtractor={(item, index) => index.toString()}
-            alwaysBounceVertical={true}
+            keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
             refreshControl={
                 <RefreshControl
                     refreshing={refreshing}
                     onRefresh={onRefresh}
+                    colors={["#2F5D9F"]}
                 />
             }
-            contentContainerStyle={{ padding: 15 }}
+            contentContainerStyle={{ padding: 20 }}
             renderItem={({ item }) => {
 
-                const estadoInfo = obtenerEstiloEstado(item.estado);
+                const colorEstado = obtenerColorEstado(item.estado);
 
                 return (
                     <View style={styles.card}>
 
-                        <Text style={styles.fecha}>
-                            📅 {formatearFecha(item.fecha)}
-                        </Text>
+                        {/* Línea lateral de estado */}
+                        <View style={[styles.estadoLinea, { backgroundColor: colorEstado }]} />
 
-                        <Text style={styles.tipo}>
-                            🕒 {traducirTipo(item.tipo)}
-                        </Text>
+                        <View style={styles.contenido}>
 
-                        <Text style={styles.descripcion}>
-                            {item.descripcion}
-                        </Text>
+                            <Text style={styles.fecha}>
+                                {formatearFecha(item.fecha)}
+                            </Text>
 
-                        <Text style={[styles.estado, { color: estadoInfo.color }]}>
-                            {estadoInfo.label}
-                        </Text>
+                            <Text style={styles.tipo}>
+                                {traducirTipo(item.tipo)}
+                            </Text>
 
-                        {item.comentario_rrhh && (
-                            <View style={styles.comentarioBox}>
-                                <Text style={styles.comentarioTitulo}>
-                                    💬 Comentario RRHH
-                                </Text>
-                                <Text style={styles.comentarioTexto}>
-                                    {item.comentario_rrhh}
-                                </Text>
-                            </View>
-                        )}
+                            <Text style={styles.descripcion}>
+                                {item.descripcion}
+                            </Text>
+
+                            <Text style={[styles.estadoTexto, { color: colorEstado }]}>
+                                {item.estado.toUpperCase()}
+                            </Text>
+
+                            {item.comentario_rrhh && (
+                                <View style={styles.comentarioBox}>
+                                    <Text style={styles.comentarioTitulo}>
+                                        Comentario RRHH
+                                    </Text>
+                                    <Text style={styles.comentarioTexto}>
+                                        {item.comentario_rrhh}
+                                    </Text>
+                                </View>
+                            )}
+
+                        </View>
 
                     </View>
                 );
@@ -147,49 +206,68 @@ const styles = StyleSheet.create({
     },
 
     card: {
-        backgroundColor: "#ffffff",
-        padding: 18,
-        borderRadius: 12,
+        backgroundColor: "#FFFFFF",
+        borderRadius: 14,
         marginBottom: 18,
-        elevation: 4
+        flexDirection: "row",
+        elevation: 4,
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 3 }
+    },
+
+    estadoLinea: {
+        width: 6,
+        borderTopLeftRadius: 14,
+        borderBottomLeftRadius: 14
+    },
+
+    contenido: {
+        flex: 1,
+        padding: 16
     },
 
     fecha: {
-        fontSize: 14,
-        fontWeight: "600",
+        fontSize: 13,
+        color: "#777",
         marginBottom: 6
     },
 
     tipo: {
-        fontSize: 15,
-        fontWeight: "500",
-        marginBottom: 6
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 6,
+        color: "#2F5D9F"
     },
 
     descripcion: {
         fontSize: 14,
-        marginBottom: 10
+        marginBottom: 10,
+        color: "#444"
     },
 
-    estado: {
-        fontSize: 15,
+    estadoTexto: {
         fontWeight: "bold",
-        marginBottom: 10
+        marginBottom: 8
     },
 
     comentarioBox: {
-        backgroundColor: "#f4f6f7",
+        backgroundColor: "#F4F6FA",
         padding: 10,
         borderRadius: 8
     },
 
     comentarioTitulo: {
-        fontWeight: "bold",
-        marginBottom: 3
+        fontWeight: "600",
+        marginBottom: 4,
+        fontSize: 13
     },
 
     comentarioTexto: {
-        fontStyle: "italic"
+        fontStyle: "italic",
+        fontSize: 13,
+        color: "#555"
     }
 
 });

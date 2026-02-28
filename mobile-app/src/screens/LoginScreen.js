@@ -87,7 +87,7 @@ export default function LoginScreen({ navigation }) {
 
                     <View style={styles.card}>
 
-                        <Text style={styles.titulo}>Bienvenido</Text>
+                        <Text style={styles.titulo}>Bienvenido/a</Text>
 
                         <TextInput
                             style={styles.input}
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
         paddingHorizontal: 30,
     },
     logo: {
-        width: 180,
-        height: 180,
+        width: 200,
+        height: 200,
         alignSelf: 'center',
         marginBottom: 30,
         resizeMode: 'contain'
