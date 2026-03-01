@@ -95,7 +95,8 @@ class Nomina(models.Model):
             attendances = self.env['hr.attendance'].search([
                 ('employee_id', '=', empleado.id),
                 ('check_in', '>=', fecha_inicio),
-                ('check_in', '<', fecha_fin)
+                ('check_in', '<', fecha_fin),
+                ('check_out', '!=', False)  # Solo considerar registros completos
             ])
 
             horas_trabajadas = sum(att.worked_hours for att in attendances)

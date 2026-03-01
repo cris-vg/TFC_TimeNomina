@@ -57,10 +57,12 @@ class HrEmployee(models.Model):
             ('check_out', '=', False)
         ], limit=1)
 
-        ahora = fields.Datetime.now()
+        ahora_utc = fields.Datetime.now()
+        # Convertir a hora local del empleado
+        ahora_local= fields.Datetime.context_timestamp(self, ahora_utc)
 
         # Convertir hora actual a float (ej: 8:30 = 8.5)
-        hora_actual = ahora.hour + (ahora.minute / 60.0)
+        hora_actual = ahora_local.hour + (ahora_local.minute / 60.0)
 
         fuera_de_rango = False
 
@@ -80,7 +82,7 @@ class HrEmployee(models.Model):
 
             Attendance.create({
                 'employee_id': self.id,
-                'check_in': ahora,
+                'check_in': ahora_utc,
                 'in_latitude': latitude,
                 'in_longitude': longitude,
                 'es_anomalia': fuera_de_rango,
@@ -90,7 +92,7 @@ class HrEmployee(models.Model):
             return {
                 "success": True,
                 "estado": "entrada",
-                "timestamp": ahora,
+                "timestamp": ahora_utc,
                 "latitud": latitude,
                 "longitud": longitude,
                 "fuera_de_rango": fuera_de_rango
@@ -111,7 +113,7 @@ class HrEmployee(models.Model):
                     fuera_de_rango = True
 
             ultimo_fichaje.write({
-                'check_out': ahora,
+                'check_out': ahora_utc,
                 'out_latitude': latitude,
                 'out_longitude': longitude,
                 'es_anomalia': fuera_de_rango,
@@ -133,7 +135,7 @@ class HrEmployee(models.Model):
             return {
                 "success": True,
                 "estado": "salida",
-                "timestamp": ahora,
+                "timestamp": ahora_utc,
                 "latitud": latitude,
                 "longitud": longitude,
                 "fuera_de_rango": fuera_de_rango
