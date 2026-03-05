@@ -39,7 +39,7 @@ class GenerarNominaWizard(models.TransientModel):
         Attendance = self.env['hr.attendance']
         Nomina = self.env['nomina.nomina']
 
-        # 🚫 Evitar duplicados
+        # Evitar duplicados
         existe = Nomina.search([
             ('empleado_id', '=', self.empleado_id.id),
             ('mes', '=', str(mes)),
@@ -49,7 +49,7 @@ class GenerarNominaWizard(models.TransientModel):
         if existe:
             raise UserError("Ya existe una nómina para ese mes.")
 
-        # 🚨 Comprobar anomalías pendientes
+        #  Comprobar anomalías pendientes
         anomalias = Attendance.search([
             ('employee_id', '=', self.empleado_id.id),
             ('check_in', '>=', inicio_mes),
@@ -62,7 +62,7 @@ class GenerarNominaWizard(models.TransientModel):
         if anomalias:
             raise UserError("Existen fichajes con anomalías pendientes.")
 
-        # 🧮 Calcular horas trabajadas
+        #  Calcular horas trabajadas
         attendances = Attendance.search([
             ('employee_id', '=', self.empleado_id.id),
             ('check_in', '>=', inicio_mes),

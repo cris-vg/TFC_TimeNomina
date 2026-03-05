@@ -4,7 +4,7 @@ const URL_ODOO = "https://nonconceptually-phyllodial-magan.ngrok-free.dev/jsonrp
 
 
 /**
- * 🔐 LOGIN
+ *  LOGIN
  */
 export async function loginOdoo(baseDatos, usuario, password) {
     try {
@@ -47,7 +47,7 @@ export async function loginOdoo(baseDatos, usuario, password) {
 
 
 /**
- * 👤 OBTENER EMPLEADO VINCULADO
+ *  OBTENER EMPLEADO VINCULADO
  */
 export async function obtenerEmpleado(baseDatos, uid, password) {
     try {
@@ -91,7 +91,7 @@ export async function obtenerEmpleado(baseDatos, uid, password) {
 
 
 /**
- * 🕒 FICHAR DESDE APP
+ *  FICHAR DESDE APP
  */
 export async function ficharDesdeApp(
     baseDatos,
@@ -142,7 +142,7 @@ export async function ficharDesdeApp(
 }
 
 /**
- * 📝 FICHAJE MANUAL
+ *  FICHAJE MANUAL
  */
 export async function fichajeManual(
     baseDatos,
@@ -190,7 +190,7 @@ export async function fichajeManual(
 }
 
 /**
- * ✅ ACEPTAR MODIFICACIÓN
+ *  ACEPTAR MODIFICACIÓN
  */
 export async function aceptarModificacion(
     baseDatos,
@@ -243,7 +243,7 @@ export async function aceptarModificacion(
 
 
 /**
- * ❌ RECHAZAR MODIFICACIÓN
+ *  RECHAZAR MODIFICACIÓN
  */
 export async function rechazarModificacion(
     baseDatos,
@@ -297,7 +297,7 @@ export async function rechazarModificacion(
 
 
 /**
- * 📜 OBTENER HISTORIAL DE FICHAJES
+ *  OBTENER HISTORIAL DE FICHAJES
  */
 export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
     try {
@@ -356,7 +356,7 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
 
 
 /**
- * 📝 CREAR JUSTIFICACIÓN (con documento)
+ *  CREAR JUSTIFICACIÓN (con documento)
  */
 export async function crearJustificacion(
     baseDatos,
@@ -412,7 +412,7 @@ export async function crearJustificacion(
 
 
 /**
- * 📂 OBTENER MIS JUSTIFICACIONES
+ *  OBTENER MIS JUSTIFICACIONES
  */
 export async function obtenerJustificaciones(baseDatos, uid, password, empleadoId) {
     try {
@@ -522,7 +522,7 @@ export async function descargarNominaPDF(baseDatos, uid, password, nominaId) {
 }
 
 /**
- * 👤 OBTENER PERFIL EMPLEADO
+ *  OBTENER PERFIL EMPLEADO
  */
 export async function obtenerPerfil(baseDatos, uid, password, empleadoId) {
     try {

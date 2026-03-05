@@ -12,7 +12,7 @@ class HrAttendance(models.Model):
         string="Requiere revisión",
         default=False
     )
-     # 🆕 NUEVOS CAMPOS
+     #  NUEVOS CAMPOS
     modificado_por_rrhh = fields.Boolean(default=False)
     pendiente_confirmacion = fields.Boolean(default=False)
 
@@ -105,7 +105,7 @@ class HrAttendance(models.Model):
     })
 
         self.message_post(
-        body=f"❌ El empleado ha rechazado la modificación.<br/>Motivo: {motivo}"
+        body=f" El empleado ha rechazado la modificación.<br/>Motivo: {motivo}"
     )
 
         return {"success": True}

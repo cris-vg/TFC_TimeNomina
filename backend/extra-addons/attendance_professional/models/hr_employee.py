@@ -34,7 +34,7 @@ class HrEmployee(models.Model):
 
         self.ensure_one()
 
-        # 🔐 Verificar usuario vinculado
+        #  Verificar usuario vinculado
         if not self.env.user.employee_id:
             return {
                 "success": False,
@@ -42,7 +42,7 @@ class HrEmployee(models.Model):
                 "message": "Usuario no vinculado a ningún empleado"
             }
 
-        # 🔐 Verificar que ficha su propio empleado
+        #  Verificar que ficha su propio empleado
         if self.env.user.employee_id.id != self.id:
             return {
                 "success": False,
@@ -120,12 +120,12 @@ class HrEmployee(models.Model):
                 'requiere_revision': fuera_de_rango
             })
 
-            # 🧮 Calcular diferencia en horas
+            #  Calcular diferencia en horas
             if ultimo_fichaje.check_in and ultimo_fichaje.check_out:
                 diferencia = ultimo_fichaje.check_out - ultimo_fichaje.check_in
                 horas_trabajadas = diferencia.total_seconds() / 3600
 
-                # 🚨 Límite máximo 12 horas
+                #  Límite máximo 12 horas
                 if horas_trabajadas > 12:
                     ultimo_fichaje.write({
                         'es_anomalia': True,
@@ -149,7 +149,7 @@ class HrEmployee(models.Model):
 
         self.ensure_one()
 
-        # 🔐 Seguridad: empleado vinculado
+        #  Seguridad: empleado vinculado
         if not self.env.user.employee_id:
             return {
                 "success": False,
@@ -295,7 +295,7 @@ class HrEmployee(models.Model):
 
         self.ensure_one()
 
-        # 🔐 Seguridad
+        #  Seguridad
         if not self.env.user.employee_id or self.env.user.employee_id.id != self.id:
             return {
                 "success": False,

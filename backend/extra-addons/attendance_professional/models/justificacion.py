@@ -15,20 +15,20 @@ class AttendanceJustification(models.Model):
         ondelete='cascade'
     )
 
-    # 🕒 Fichaje relacionado (opcional)
+    #  Fichaje relacionado (opcional)
     attendance_id = fields.Many2one(
         'hr.attendance',
         string="Fichaje relacionado"
     )
 
-    # 📅 Fecha de la incidencia
+    #  Fecha de la incidencia
     fecha = fields.Datetime(
         string="Fecha",
         required=True,
         default=fields.Datetime.now
     )
 
-    # 🏷 Tipo de justificación
+    #  Tipo de justificación
     tipo = fields.Selection(
         [
             ('retraso', 'Retraso'),
@@ -41,13 +41,13 @@ class AttendanceJustification(models.Model):
         required=True
     )
 
-    # 📝 Descripción del empleado
+    #  Descripción del empleado
     descripcion = fields.Text(
         string="Descripción",
         required=True
     )
 
-    # 📎 Documento adjunto
+    #  Documento adjunto
     documento = fields.Binary(
         string="Documento adjunto"
     )
@@ -56,7 +56,7 @@ class AttendanceJustification(models.Model):
         string="Nombre del archivo"
     )
 
-    # 🔄 Estado de validación
+    #  Estado de validación
     estado = fields.Selection(
         [
             ('pendiente', 'Pendiente'),
@@ -67,7 +67,7 @@ class AttendanceJustification(models.Model):
         default='pendiente'
     )
 
-    # 💬 Comentario de RRHH
+    #  Comentario de RRHH
     comentario_rrhh = fields.Text(
         string="Comentario RRHH"
     )
