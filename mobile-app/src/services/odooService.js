@@ -120,7 +120,8 @@ export async function ficharDesdeApp(
                         [empleadoId],
                         {
                             latitude: latitud,
-                            longitude: longitud
+                            longitude: longitud,
+
                         }
                     ]
                 },
@@ -224,7 +225,6 @@ export async function aceptarModificacion(
 
     const data = await response.json();
 
-    console.log("RAW aceptar:", data);
 
     if (data.result) {
         return data.result;
@@ -278,7 +278,6 @@ export async function rechazarModificacion(
 
     const data = await response.json();
 
-    console.log("RAW rechazar:", data);
 
     if (data.result) {
         return data.result;
@@ -344,8 +343,7 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
         });
 
         const data = await response.json();
-        console.log("Historial response: ", data);
-        console.log("Resultado:", data.result);
+
 
         if (data.result) {
             return { exito: true, datos: data.result };
@@ -520,7 +518,7 @@ export async function descargarNominaPDF(baseDatos, uid, password, nominaId) {
     });
 
     const data = await response.json();
-    console.log("Respuesta cruda JSONRPC PDF:", data);
+
 
     return data.result;
 }
@@ -553,7 +551,7 @@ export async function obtenerPerfil(baseDatos, uid, password, empleadoId) {
         });
 
         const data = await response.json();
-        console.log("RAW perfil:", data);
+
 
         if (data.result && data.result.success) {
             return { exito: true, datos: data.result.perfil };

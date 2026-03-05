@@ -51,7 +51,7 @@ export default function FichajeScreen({ navigation }) {
 
     const consultarEstado = async () => {
 
-        console.log("🔄 Consultando estado jornada...")
+
 
         const resultado = await obtenerEstadoJornada(
             baseDatos,
@@ -60,7 +60,7 @@ export default function FichajeScreen({ navigation }) {
             empleadoId
         );
 
-        console.log("🔄 Consultando estado jornada...")
+
 
         if (resultado.exito) {
             setTrabajando(resultado.datos.trabajando);
@@ -150,13 +150,29 @@ export default function FichajeScreen({ navigation }) {
             return;
         }
 
+        const direccion = await Location.reverseGeocodeAsync({
+            latitude: coordenadas.latitud,
+            longitude: coordenadas.longitud
+        });
+
+        let direccionTexto = "";
+        if (direccion.length > 0) {
+
+            direccionTexto =
+                (direccion[0].street || "") + " " +
+                (direccion[0].name || "") + " " +
+                (direccion[0].city || "") + " " +
+                (direccion[0].country || "");
+        }
+
         const resultado = await ficharDesdeApp(
             baseDatos,
             uid,
             password,
             empleadoId,
             coordenadas.latitud,
-            coordenadas.longitud
+            coordenadas.longitud,
+            direccionTexto
         );
 
         if (resultado.exito) {

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 from odoo import models, fields, api
+import requests
 
 
 class HrEmployee(models.Model):
@@ -25,6 +26,28 @@ class HrEmployee(models.Model):
         string="Margen permitido (minutos)",
         default=10
     )
+
+    # =====================================================
+    # OBTENER DIRECCIÓN DESDE COORDENADAS
+    # =====================================================
+
+    def _obtener_direccion(self, latitude, longitude):
+        if not latitude or not longitude:
+            return false
+        try:
+            url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={latitude}&lon={longitude}"
+            response = requests.get(
+                url, 
+                headers={"User-Agent": "TimeNomina"}
+            )
+            data = response.json()
+            if "display_name" in data:
+                return data ["display_name"]
+        except Exception:
+            pass
+        return False
+            
+
 
     # =====================================================
     # FICHAJE DESDE APP
@@ -65,6 +88,7 @@ class HrEmployee(models.Model):
         hora_actual = ahora_local.hour + (ahora_local.minute / 60.0)
 
         fuera_de_rango = False
+        direccion = self._obtener_direccion(latitude, longitude)
 
         # =====================================================
         # ENTRADA
@@ -85,9 +109,12 @@ class HrEmployee(models.Model):
                 'check_in': ahora_utc,
                 'in_latitude': latitude,
                 'in_longitude': longitude,
+                'in_location': direccion,
                 'es_anomalia': fuera_de_rango,
                 'requiere_revision': fuera_de_rango
             })
+
+            self.actualizar_direcciones_antiguas()
 
             return {
                 "success": True,
@@ -116,6 +143,7 @@ class HrEmployee(models.Model):
                 'check_out': ahora_utc,
                 'out_latitude': latitude,
                 'out_longitude': longitude,
+                'out_location': direccion,
                 'es_anomalia': fuera_de_rango,
                 'requiere_revision': fuera_de_rango
             })
@@ -132,6 +160,7 @@ class HrEmployee(models.Model):
                         'requiere_revision': True
                     })
 
+            self.actualizar_direcciones_antiguas()
             return {
                 "success": True,
                 "estado": "salida",
@@ -360,3 +389,20 @@ class HrEmployee(models.Model):
             "trabajando": False,
             "hora_entrada": None
         }
+    
+    def actualizar_direcciones_antiguas(self):
+        import requests
+        Attendance = self.env['hr.attendance'].search([])
+        for att in Attendance:
+            if att.in_latitude and not att.in_location:
+                try:
+                    url = f"https://nominatim.openstreetmap.org/reverse?format=json&lat={att.in_latitude}&lon={att.in_longitude}"
+                    response = requests.get(
+                        url, 
+                        headers={"User-Agent": "TimeNomina"}
+                    )
+                    data = response.json()
+                    if "display_name" in data:
+                        att.in_location = data["display_name"]
+                except Exception:
+                    pass

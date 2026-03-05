@@ -86,22 +86,39 @@ export default function HistorialScreen({ navigation }) {
     const formatearHora = (fecha) => {
         if (!fecha) return "—";
         const date = new Date(fecha + "Z");
-        return date.toLocaleTimeString([], {
+        return date.toLocaleTimeString("es-ES", {
             hour: "2-digit",
-            minute: "2-digit"
+            minute: "2-digit",
+            timeZone: "Europe/Madrid"
         });
     };
+
 
     const formatearFecha = (fecha) => {
         if (!fecha) return "—";
         const date = new Date(fecha + "Z");
-        return date.toLocaleString();
+        return date.toLocaleDateString("es-ES", {
+            timeZone: "Europe/Madrid",
+        });
+    };
+
+    const formatearHorasNaturales = (horas) => {
+
+        if (!horas) return "0h";
+
+        const totalMinutos = Math.round(horas * 60);
+        const h = Math.floor(totalMinutos / 60);
+        const m = totalMinutos % 60;
+
+        if (m === 0) return `${h}h`;
+        return `${h}h ${m}m`;
     };
     const registrosFiltrados = registros.filter((item) => {
         const texto = busqueda.toLowerCase();
 
         const fecha = formatearFecha(item.check_in).toLowerCase();
         const horas = (item.worked_hours?.toFixed(2) || "0").toLowerCase();
+
         return (
             fecha.includes(texto) || horas.includes(texto)
         );
@@ -154,132 +171,146 @@ export default function HistorialScreen({ navigation }) {
         }
     };
 
-    const renderItem = ({ item }) => (
-        <View style={styles.tarjeta}>
+    const renderItem = ({ item }) => {
+        const entrada = item.check_in ? new Date(item.check_in + "Z") : null;
+        const salida = item.check_out ? new Date(item.check_out + "Z") : null;
 
-            <View style={styles.barraLateral} />
-            <Text style={styles.titulo}>
-                {formatearFecha(item.check_in)}
-            </Text>
+        const mismoDia =
+            entrada &&
+            salida &&
+            entrada.toDateString() === salida.toDateString();
+        return (
+            <View style={styles.tarjeta}>
 
-            {/*ENTRADA*/}
-
-            <View style={styles.lineaFila}>
-                <MaterialIcons name="login" size={18} color="#2e7d32" />
-                <Text style={styles.textoFila}>
-                    Entrada: {formatearHora(item.check_in)}
+                <View style={styles.barraLateral} />
+                <Text style={styles.titulo}>
+                    {formatearFecha(item.check_in)}
                 </Text>
-            </View>
 
-            {/*SALIDA*/}
+                {/*ENTRADA*/}
 
-            <View style={styles.lineaFila}>
-                <MaterialIcons name="logout" size={18} color="#d9534f" />
-
-                <Text style={styles.texto}>
-                    Salida: {formatearFecha(item.check_out)}
-                </Text>
-            </View>
-
-            {/*HORAS TRABAJADAS*/}
-
-            <View style={styles.lineaFila}>
-                <MaterialIcons name="schedule" size={18} color="#556A9E" />
-                <Text style={styles.textoFila}>
-                    Horas trabajadas: {item.worked_hours?.toFixed(2) || "0"}
-                </Text>
-            </View>
-
-            {/*ESTADO*/}
-
-            {!item.es_anomalia && !item.pendiente_confirmacion && (
-                <Text style={styles.estadoCorrecto}>
-                    🟢 Correcto
-                </Text>
-            )}
-            {item.pendiente_confirmacion && (
-                <>
-                    <Text style={styles.estadoPendiente}>
-                        🟠 Pendiente revisión
+                <View style={styles.lineaFila}>
+                    <MaterialIcons name="login" size={18} color="#2e7d32" />
+                    <Text style={styles.textoFila}>
+                        Entrada: {formatearHora(item.check_in)}
                     </Text>
-                    <Text style={styles.textoPendiente}>
-                        RRHH ha modificado este fichaje
-                    </Text>
-                </>
-            )}
-            {item.es_anomalia && (
-                <Text style={styles.estadoIrregular}>
-                    🔴 Irregular
-                </Text>
-            )}
-
-            {/*UBICACIÓN ENTRADA*/}
-
-            {item.in_latitude !== null &&
-                item.in_latitude !== undefined &&
-                item.in_latitude !== 0 && (
-                    <TouchableOpacity
-                        style={styles.botonUbicacion}
-                        onPress={() =>
-                            navigation.navigate("Mapa", {
-                                latitud: item.in_latitude,
-                                longitud: item.in_longitude
-                            })
-                        }
-                    >
-                        <MaterialIcons name="place" size={18} color="#556A9E" />
-                        <Text style={styles.textoUbicacion}>
-                            Ver ubicación de entrada
-                        </Text>
-                    </TouchableOpacity>
-                )}
-
-            {/*UBICACION SALIDA*/}
-
-            {item.out_latitude !== null &&
-                item.out_latitude !== undefined &&
-                item.out_latitude !== 0 && (
-                    <TouchableOpacity
-                        style={styles.botonUbicacion}
-                        onPress={() =>
-                            navigation.navigate("Mapa", {
-                                latitud: item.out_latitude,
-                                longitud: item.out_longitude
-                            })
-                        }
-                    >
-                        <MaterialIcons name="place" size={18} color="#556A9E" />
-                        <Text style={styles.textoUbicacion}>
-                            Ver ubicación de salida
-                        </Text>
-                    </TouchableOpacity>
-                )}
-
-            {item.pendiente_confirmacion && (
-                <View style={{ marginTop: 10 }}>
-                    <TouchableOpacity
-                        style={styles.botonPrimario}
-                        onPress={() => manejarAceptar(item.id)}
-                    >
-                        <Text style={styles.textoBoton}>
-                            Aceptar
-                        </Text>
-                    </TouchableOpacity>
-
-                    <TouchableOpacity
-                        style={styles.botonSecundario}
-                        onPress={() => abrirModalRechazo(item.id)}
-                    >
-                        <Text style={styles.textoBotonSecundario}>
-                            Rechazar
-                        </Text>
-                    </TouchableOpacity>
-
                 </View>
-            )}
-        </View>
 
-    );
+                {/*SALIDA*/}
+
+                <View style={styles.lineaFila}>
+                    <MaterialIcons name="logout" size={18} color="#d9534f" />
+
+                    <Text style={styles.textoFila}>
+                        Salida: {
+                            !salida
+                                ? "-"
+                                : mismoDia
+                                    ? formatearHora(item.check_out)
+                                    : formatearFecha(item.check_out) + " " + formatearHora(item.check_out)}
+                    </Text>
+                </View>
+
+                {/*HORAS TRABAJADAS*/}
+
+                <View style={styles.lineaFila}>
+                    <MaterialIcons name="schedule" size={18} color="#556A9E" />
+                    <Text style={styles.textoFila}>
+                        Horas trabajadas: {formatearHorasNaturales(item.worked_hours)}
+                    </Text>
+                </View>
+
+                {/*ESTADO*/}
+
+                {!item.es_anomalia && !item.pendiente_confirmacion && (
+                    <Text style={styles.estadoCorrecto}>
+                        🟢 Correcto
+                    </Text>
+                )}
+                {item.pendiente_confirmacion && (
+                    <>
+                        <Text style={styles.estadoPendiente}>
+                            🟠 Pendiente revisión
+                        </Text>
+                        <Text style={styles.textoPendiente}>
+                            RRHH ha modificado este fichaje
+                        </Text>
+                    </>
+                )}
+                {item.es_anomalia && (
+                    <Text style={styles.estadoIrregular}>
+                        🔴 Irregular
+                    </Text>
+                )}
+
+                {/*UBICACIÓN ENTRADA*/}
+
+                {item.in_latitude !== null &&
+                    item.in_latitude !== undefined &&
+                    item.in_latitude !== 0 && (
+                        <TouchableOpacity
+                            style={styles.botonUbicacion}
+                            onPress={() =>
+                                navigation.navigate("Mapa", {
+                                    latitud: item.in_latitude,
+                                    longitud: item.in_longitude
+                                })
+                            }
+                        >
+                            <MaterialIcons name="place" size={18} color="#556A9E" />
+                            <Text style={styles.textoUbicacion}>
+                                Ver ubicación de entrada
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
+                {/*UBICACION SALIDA*/}
+
+                {item.out_latitude !== null &&
+                    item.out_latitude !== undefined &&
+                    item.out_latitude !== 0 && (
+                        <TouchableOpacity
+                            style={styles.botonUbicacion}
+                            onPress={() =>
+                                navigation.navigate("Mapa", {
+                                    latitud: item.out_latitude,
+                                    longitud: item.out_longitude
+                                })
+                            }
+                        >
+                            <MaterialIcons name="place" size={18} color="#556A9E" />
+                            <Text style={styles.textoUbicacion}>
+                                Ver ubicación de salida
+                            </Text>
+                        </TouchableOpacity>
+                    )}
+
+                {item.pendiente_confirmacion && (
+                    <View style={{ marginTop: 10 }}>
+                        <TouchableOpacity
+                            style={styles.botonPrimario}
+                            onPress={() => manejarAceptar(item.id)}
+                        >
+                            <Text style={styles.textoBoton}>
+                                Aceptar
+                            </Text>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity
+                            style={styles.botonSecundario}
+                            onPress={() => abrirModalRechazo(item.id)}
+                        >
+                            <Text style={styles.textoBotonSecundario}>
+                                Rechazar
+                            </Text>
+                        </TouchableOpacity>
+
+                    </View>
+                )}
+            </View>
+
+        );
+    };
 
     if (cargando) {
         return (
