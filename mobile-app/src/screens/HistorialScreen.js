@@ -45,6 +45,7 @@ export default function HistorialScreen({ navigation }) {
 
     const [registros, setRegistros] = useState([]);
     const [cargando, setCargando] = useState(true);
+    const [busqueda, setBusqueda] = useState("");
 
     const [modalVisible, setModalVisible] = useState(false);
     const [motivoRechazo, setMotivoRechazo] = useState("");
@@ -82,11 +83,29 @@ export default function HistorialScreen({ navigation }) {
         setCargando(false);
     };
 
+    const formatearHora = (fecha) => {
+        if (!fecha) return "—";
+        const date = new Date(fecha + "Z");
+        return date.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit"
+        });
+    };
+
     const formatearFecha = (fecha) => {
         if (!fecha) return "—";
         const date = new Date(fecha + "Z");
         return date.toLocaleString();
     };
+    const registrosFiltrados = registros.filter((item) => {
+        const texto = busqueda.toLowerCase();
+
+        const fecha = formatearFecha(item.check_in).toLowerCase();
+        const horas = (item.worked_hours?.toFixed(2) || "0").toLowerCase();
+        return (
+            fecha.includes(texto) || horas.includes(texto)
+        );
+    });
 
     const manejarAceptar = async (attendanceId) => {
 
@@ -139,35 +158,105 @@ export default function HistorialScreen({ navigation }) {
         <View style={styles.tarjeta}>
 
             <View style={styles.barraLateral} />
-
             <Text style={styles.titulo}>
                 {formatearFecha(item.check_in)}
             </Text>
 
-            <Text style={styles.texto}>
-                Salida: {formatearFecha(item.check_out)}
-            </Text>
+            {/*ENTRADA*/}
 
-            <Text style={styles.texto}>
-                Horas: {item.worked_hours?.toFixed(2) || "0"}
-            </Text>
+            <View style={styles.lineaFila}>
+                <MaterialIcons name="login" size={18} color="#2e7d32" />
+                <Text style={styles.textoFila}>
+                    Entrada: {formatearHora(item.check_in)}
+                </Text>
+            </View>
 
-            {item.es_anomalia && (
-                <View style={styles.estadoWarning}>
-                    <MaterialIcons name="warning" size={18} color="#d9534f" />
-                    <Text style={styles.textoWarning}>
-                        Fichaje irregular - revisión RRHH
-                    </Text>
-                </View>
+            {/*SALIDA*/}
+
+            <View style={styles.lineaFila}>
+                <MaterialIcons name="logout" size={18} color="#d9534f" />
+
+                <Text style={styles.texto}>
+                    Salida: {formatearFecha(item.check_out)}
+                </Text>
+            </View>
+
+            {/*HORAS TRABAJADAS*/}
+
+            <View style={styles.lineaFila}>
+                <MaterialIcons name="schedule" size={18} color="#556A9E" />
+                <Text style={styles.textoFila}>
+                    Horas trabajadas: {item.worked_hours?.toFixed(2) || "0"}
+                </Text>
+            </View>
+
+            {/*ESTADO*/}
+
+            {!item.es_anomalia && !item.pendiente_confirmacion && (
+                <Text style={styles.estadoCorrecto}>
+                    🟢 Correcto
+                </Text>
             )}
-
             {item.pendiente_confirmacion && (
-                <View style={{ marginTop: 10 }}>
-
+                <>
+                    <Text style={styles.estadoPendiente}>
+                        🟠 Pendiente revisión
+                    </Text>
                     <Text style={styles.textoPendiente}>
                         RRHH ha modificado este fichaje
                     </Text>
+                </>
+            )}
+            {item.es_anomalia && (
+                <Text style={styles.estadoIrregular}>
+                    🔴 Irregular
+                </Text>
+            )}
 
+            {/*UBICACIÓN ENTRADA*/}
+
+            {item.in_latitude !== null &&
+                item.in_latitude !== undefined &&
+                item.in_latitude !== 0 && (
+                    <TouchableOpacity
+                        style={styles.botonUbicacion}
+                        onPress={() =>
+                            navigation.navigate("Mapa", {
+                                latitud: item.in_latitude,
+                                longitud: item.in_longitude
+                            })
+                        }
+                    >
+                        <MaterialIcons name="place" size={18} color="#556A9E" />
+                        <Text style={styles.textoUbicacion}>
+                            Ver ubicación de entrada
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+            {/*UBICACION SALIDA*/}
+
+            {item.out_latitude !== null &&
+                item.out_latitude !== undefined &&
+                item.out_latitude !== 0 && (
+                    <TouchableOpacity
+                        style={styles.botonUbicacion}
+                        onPress={() =>
+                            navigation.navigate("Mapa", {
+                                latitud: item.out_latitude,
+                                longitud: item.out_longitude
+                            })
+                        }
+                    >
+                        <MaterialIcons name="place" size={18} color="#556A9E" />
+                        <Text style={styles.textoUbicacion}>
+                            Ver ubicación de salida
+                        </Text>
+                    </TouchableOpacity>
+                )}
+
+            {item.pendiente_confirmacion && (
+                <View style={{ marginTop: 10 }}>
                     <TouchableOpacity
                         style={styles.botonPrimario}
                         onPress={() => manejarAceptar(item.id)}
@@ -185,29 +274,11 @@ export default function HistorialScreen({ navigation }) {
                             Rechazar
                         </Text>
                     </TouchableOpacity>
+
                 </View>
             )}
-
-            {item.in_latitude !== null &&
-                item.in_latitude !== undefined &&
-                item.in_latitude !== 0 && (
-                    <TouchableOpacity
-                        style={styles.botonUbicacion}
-                        onPress={() =>
-                            navigation.navigate("Mapa", {
-                                latitud: item.in_latitude,
-                                longitud: item.in_longitude
-                            })
-                        }
-                    >
-                        <MaterialIcons name="place" size={18} color="#556A9E" />
-                        <Text style={styles.textoUbicacion}>
-                            Ver ubicación
-                        </Text>
-                    </TouchableOpacity>
-                )}
-
         </View>
+
     );
 
     if (cargando) {
@@ -229,9 +300,18 @@ export default function HistorialScreen({ navigation }) {
                     Historial de fichajes
                 </Text>
             </LinearGradient>
+            <View style={styles.buscadorContainer}>
+                <MaterialIcons name="search" size={20} color="#556A9E" />
+                <TextInput
+                    style={styles.buscadorInput}
+                    placeholder="Buscar fichaje..."
+                    value={busqueda}
+                    onChangeText={setBusqueda}
+                />
+            </View>
 
             <FlatList
-                data={registros}
+                data={registrosFiltrados}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={renderItem}
                 contentContainerStyle={{ padding: 20 }}
@@ -329,25 +409,106 @@ const styles = StyleSheet.create({
         marginBottom: 5
     },
 
-    texto: {
-        color: "#333",
+    lineaFila: {
+        flexDirection: "row",
+        alignItems: "center",
         marginTop: 4
     },
 
-    estadoWarning: {
+    textoFila: {
+        marginLeft: 6,
+        color: "#333"
+    },
+
+    estadoCorrecto: {
+        color: "#2e7d32",
+        marginTop: 6,
+        fontWeight: "600"
+    },
+
+    estadoPendiente: {
+        color: "#f0ad4e",
+        marginTop: 6,
+        fontWeight: "600"
+    },
+
+    estadoIrregular: {
+        color: "#d9534f",
+        marginTop: 6,
+        fontWeight: "600"
+    },
+
+    textoPendiente: {
+        color: "#d9534f",
+        marginTop: 4,
+        fontSize: 13
+    },
+
+    botonUbicacion: {
         flexDirection: "row",
         alignItems: "center",
         marginTop: 10
     },
 
-    textoWarning: {
-        color: "#d9534f",
-        marginLeft: 6
+    textoUbicacion: {
+        marginLeft: 6,
+        color: "#556A9E",
+        fontWeight: "600"
     },
 
-    textoPendiente: {
-        color: "#d9534f",
-        marginBottom: 10
+    buscadorContainer: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "#FFFFFF",
+        marginHorizontal: 20,
+        marginTop: 15,
+        borderRadius: 12,
+        paddingHorizontal: 10,
+        height: 45,
+
+        shadowColor: "#000",
+        shadowOpacity: 0.1,
+        shadowOffset: { width: 0, height: 3 },
+        shadowRadius: 5,
+        elevation: 3
+    },
+
+    buscadorInput: {
+        flex: 1,
+        marginLeft: 8
+    },
+
+    cargando: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center"
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: "center",
+        backgroundColor: "rgba(0,0,0,0.5)",
+        padding: 20
+    },
+
+    modalContenido: {
+        backgroundColor: "white",
+        padding: 20,
+        borderRadius: 20
+    },
+
+    modalTitulo: {
+        fontWeight: "bold",
+        marginBottom: 10,
+        fontSize: 16
+    },
+
+    input: {
+        backgroundColor: "#F4F6FA",
+        borderRadius: 12,
+        padding: 12,
+        height: 100,
+        marginBottom: 10,
+        textAlignVertical: "top"
     },
 
     botonPrimario: {
@@ -375,51 +536,5 @@ const styles = StyleSheet.create({
     textoBotonSecundario: {
         color: "#1F2A44",
         fontWeight: "600"
-    },
-
-    botonUbicacion: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginTop: 12
-    },
-
-    textoUbicacion: {
-        marginLeft: 6,
-        color: "#556A9E",
-        fontWeight: "600"
-    },
-
-    cargando: {
-        flex: 1,
-        justifyContent: "center",
-        alignItems: "center"
-    },
-
-    modalContainer: {
-        flex: 1,
-        justifyContent: "center",
-        backgroundColor: "rgba(0,0,0,0.5)",
-        padding: 20
-    },
-
-    modalContenido: {
-        backgroundColor: "white",
-        padding: 20,
-        borderRadius: 20
-    },
-
-    modalTitulo: {
-        fontWeight: "bold",
-        marginBottom: 10,
-        fontSize: 16
-    },
-
-    input: {
-        backgroundColor: "#F4F6FA",
-        borderRadius: 12,
-        padding: 12,
-        height: 100,
-        marginBottom: 10,
-        textAlignVertical: "top"
     }
 });

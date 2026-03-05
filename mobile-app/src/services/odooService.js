@@ -130,6 +130,8 @@ export async function ficharDesdeApp(
 
         const data = await response.json();
 
+        console.log("RESPUESTA FICHAJE:", data);
+
         if (data.result && data.result.success) {
             return { exito: true, datos: data.result };
         }
@@ -327,6 +329,8 @@ export async function obtenerHistorial(baseDatos, uid, password, empleadoId) {
                                 "worked_hours",
                                 "in_latitude",
                                 "in_longitude",
+                                "out_latitude",
+                                "out_longitude",
                                 "es_anomalia",
                                 "requiere_revision",
                                 "pendiente_confirmacion"
